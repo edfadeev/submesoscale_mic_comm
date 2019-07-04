@@ -25,16 +25,20 @@ PS107_merged.prev.vst <- readRDS("./Data/PS107_merged_prev_vst.rds")
 #####################################
 #Plot barplots of communities
 #####################################
+PS107_merged.prev.CTD <- subset_samples(PS107_merged.prev, Gear == "CTD")
+PS107_merged.prev.CTD <- prune_taxa(taxa_sums(PS107_merged.prev.CTD)>0,PS107_merged.prev.CTD)
+
 #transform data
-BAC_pruned.ra <- transform_sample_counts(PS107_merged.prev, function(x) x / sum(x))
+BAC_pruned.ra <- transform_sample_counts(PS107_merged.prev.CTD, function(x) x / sum(x))
 BAC_pruned.ra.long <- psmelt(BAC_pruned.ra)
 
 #calculate abundance for each taxa
-BAC_pruned.ra.long.agg <- aggregate(Abundance~StationName+Fraction+Type+Class, BAC_pruned.ra.long, FUN = "sum")
+BAC_pruned.ra.long.agg <- aggregate(Abundance~StationName+Community+Depth+Class, BAC_pruned.ra.long, FUN = "sum")
 BAC_pruned.ra.long.agg$Abundance <- BAC_pruned.ra.long.agg$Abundance*100
 
 #order of stations
-levels(BAC_pruned.ra.long.agg$StationName) <- c("EG1","EG4","N5","N4","HG9", "HG4","HG2","HG1","S3")
+BAC_pruned.ra.long.agg$StationName <- factor(BAC_pruned.ra.long.agg$StationName, levels = c("T4","T1","T2","T3","T5"))
+BAC_pruned.ra.long.agg$Depth <- as.numeric(as.character(BAC_pruned.ra.long.agg$Depth))
 #correct taxonomy
 BAC_pruned.ra.long.agg$Class <- gsub("_unclassified","_uc",BAC_pruned.ra.long.agg$Class)
 
@@ -44,71 +48,68 @@ BAC_pruned.ra.long.agg$Class[BAC_pruned.ra.long.agg$Abundance<2] <- "Other taxa"
 BAC_pruned.ra.long.agg$Class <- factor(BAC_pruned.ra.long.agg$Class,
                                        levels=c(taxa_classes,"Other taxa"))
 
-BAC_pruned.ra.long.agg.sub <- BAC_pruned.ra.long.agg[BAC_pruned.ra.long.agg$Type!="Sediment",]
-
 #Plot 
-barplots <- ggplot(BAC_pruned.ra.long.agg.sub, aes(x = StationName, y = Abundance, fill = Class)) + 
-  facet_grid(Type~Fraction, space= "fixed") +
+barplots <- ggplot(BAC_pruned.ra.long.agg, aes(x = StationName, y = Abundance, fill = Class)) + 
+  facet_grid(Depth~Community, space= "fixed") +
   geom_col()+
-  #scale_fill_manual(values = phyla.col.PS107_shared) + 
+  scale_fill_manual(values = tol21rainbow) + 
   guides(fill = guide_legend(reverse = FALSE, keywidth = 1, keyheight = 1)) +
   ylab("Sequence proportions (%) \n")+
   theme(legend.position="bottom")
 
-ggsave("./figures/barplot_sed.pdf", barplots, dpi = 300, 
+ggsave("./figures/barplot.pdf", barplots, dpi = 300, 
        width = 30, height = 30, 
        units = "cm")
 
 #####################################
 #PCoA plot
 #####################################
-#plot only water samples
-PS107_merged.vst.no.sed <- subset_samples(PS107_merged.prev.vst,Type!="Sediment")
+#subset CTD samples
+PS107_merged.vst.CTD <- subset_samples(PS107_merged.prev.vst, Gear == "CTD")
+PS107_merged.vst.CTD <- prune_taxa(taxa_sums(PS107_merged.vst.CTD)>0,PS107_merged.vst.CTD)
 
+#PS107_merged.vst.CTD <- subset_samples(PS107_merged.vst.CTD, Community == "PA")
 #calculate ordination
-PS107.ord <- ordinate(PS107_merged.vst.no.sed, method = "RDA", distance = "eucledian")
-PS107.ord.df <- plot_ordination(PS107_merged.vst.no.sed, PS107.ord, axes = c(1,2,3),justDF = TRUE)
+PS107.ord <- ordinate(PS107_merged.vst.CTD, method = "RDA", distance = "eucledian")
+PS107.ord.df <- plot_ordination(PS107_merged.vst.CTD, PS107.ord, axes = c(1,2,3),justDF = TRUE)
 
 #adjust grouping for clustering
-PS107.ord.df$new_ordination <- paste(PS107.ord.df$Type, PS107.ord.df$Fraction, sep= ".")
-PS107.ord.df$Region<- factor(
-  PS107.ord.df$Region, 
-  levels = c("EGC","WSC"))
+PS107.ord.df$new_ordination <- paste( PS107.ord.df$StationName, PS107.ord.df$Depth,PS107.ord.df$Community, sep= ".")
 
 #extract explained variance
 PS107.ord.evals <- 100 * (PS107.ord$CA$eig/ sum(PS107.ord$CA$eig))
 PS107.ord.df$ID <- rownames(PS107.ord.df)
 
-PS107.ord.p <- ggplot(data = PS107.ord.df, aes(x =PC1, y =PC2, shape = Fraction, colour = Region, group = new_ordination))+
+PS107.ord.p <- ggplot(data = PS107.ord.df, aes(x =PC1, y =PC2, shape = Community, colour = Depth, group = new_ordination))+
     geom_point(colour="black",size = 4)+
   geom_point(size = 3)+
-  #geom_text(aes(label = Type), colour = "black", nudge_y= -1,  size=3)+
+  geom_text(aes(label = new_ordination), colour = "black", nudge_y= -0.3,  size=3)+
   labs(x = sprintf("PC1 [%s%%]", round(PS107.ord.evals[1], 2)), 
        y = sprintf("PC2 [%s%%]", round(PS107.ord.evals[2], 2)), shape = "Fraction", color = "Origin")+
-  stat_ellipse(colour = "black", size = 0.5)+
-  scale_color_manual(values = c("EGC" = "blue", "WSC"="red")) +
+  #stat_ellipse(colour = "black", size = 0.5)+
+  #scale_color_manual(values = c("EGC" = "blue", "WSC"="red")) +
   theme_classic(base_size = 12)+
   theme(legend.position = "bottom")
 
-ggsave("./figures/Ordination_no_sed.pdf", PS107.ord.p, dpi = 300, 
+ggsave("./figures/Ordination_no_MSC.pdf", PS107.ord.p, dpi = 300, 
     #width = 11.4, height = 23, 
      units = "cm")
 
 #calculate dendograme
-PS107_merged.dist <- dist(t(otu_table(PS107_merged.vst.no.sed)), method = "euclidean")
+PS107_merged.dist <- dist(t(otu_table(PS107_merged.vst.CTD)), method = "euclidean")
 
 hc <- hclust(PS107_merged.dist, method = "ward.D")
 
-plot(hc, labels = paste(sample_data(PS107_merged.vst.no.sed)$StationName,
-                        sample_data(PS107_merged.vst.no.sed)$Fraction,
-                        sample_data(PS107_merged.vst.no.sed)$Type))
+plot(hc, labels = paste(sample_data(PS107_merged.vst.CTD)$StationName,
+                        sample_data(PS107_merged.vst.CTD)$Community,
+                        sample_data(PS107_merged.vst.CTD)$Depth))
 
 #####################################
 #Significance test
 #####################################
-df <- as(sample_data(PS107_merged.vst.no.sed), "data.frame")
-d <- phyloseq::distance(PS107_merged.vst.no.sed, "euclidean")
-adonis_all <- adonis(d ~ Fraction + Region + Type, df)
+df <- as(sample_data(PS107_merged.vst), "data.frame")
+d <- phyloseq::distance(PS107_merged.vst, "euclidean")
+adonis_all <- adonis(d ~ StationName + Depth + Community, df)
 adonis_all
 
 

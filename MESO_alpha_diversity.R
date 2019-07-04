@@ -156,10 +156,10 @@ Simpson_stats <- data.frame(SampleID, mean, sd, measure)
 
 #generate data set with all bacterial community characteristics
 PS107_comm.char<- data.frame(Station = sample_data(PS107_merged)$StationName,
-                           Longitude = sample_data(PS107_merged)$Longitude..degrees_east.,
-                           Type = sample_data(PS107_merged)$Type,
-                           Fraction = sample_data(PS107_merged)$Fraction,
-                           Region = sample_data(PS107_merged)$Region,
+                           Depth = sample_data(PS107_merged)$Depth,
+                           #Type = sample_data(PS107_merged)$Type,
+                           Community = sample_data(PS107_merged)$Fraction,
+                           #Region = sample_data(PS107_merged)$Region,
                            Sequences= sample_sums(PS107_merged),
                            Observed = paste(round(OTUs_stats$mean,digits=0),round(OTUs_stats$sd,digits=0),sep="\u00B1"),
                            Chao1 = paste(round(rich_stats$mean,digits=0),round(rich_stats$sd,digits=0),sep="\u00B1"),

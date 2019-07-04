@@ -37,7 +37,7 @@ source('./Scripts/clr_trans.R')
 #####################################
 OTU<- read.csv("./dada2_output/bac-arch_seqtab_nochim2.txt", h=T, sep="\t")
 TAX<- as.matrix(read.csv("./dada2_output/bac-arch_taxonomy_table.txt", h=T,sep = "\t"))
-ENV <- read.csv("./dada2_output/MESO_samples_meta.txt", sep = "\t" , h = T, row.names = 1, fill = T, na.strings=c("","NA"))
+ENV <- read.csv("./dada2_output/MESO_samples_meta1.txt", sep = "\t" , h = T, row.names = 1, fill = T, na.strings=c("","NA"))
 
 # Check order of samples
 all.equal(rownames(OTU), rownames(TAX))
@@ -48,16 +48,20 @@ TAX <- tax_table(TAX)
 meta <- sample_data(ENV)
 PS107_merged <- phyloseq(OTU, TAX, meta)
 
+#Subset negative samples and duplicates 
+PS107_merged <- subset_samples(PS107_merged, SelRep == 1)
+PS107_merged <- prune_taxa(taxa_sums(PS107_merged)>0,PS107_merged)
+
 #####################################
 #Fix categories 
 #####################################
-sample_data(PS107_merged)$Fraction<- factor(
-  sample_data(PS107_merged)$Fraction, 
+sample_data(PS107_merged)$Community<- factor(
+  sample_data(PS107_merged)$Community, 
   levels = c("FL", "PA"))
 
 sample_data(PS107_merged)$StationName<- factor(
   sample_data(PS107_merged)$StationName, 
-  levels = c("T1","T2","3","T4","T5"))
+  levels = c("T1","T2","T3","T4","T5"))
 
 #####################################
 #Plot total number of reads and OTUs per sample
@@ -77,19 +81,19 @@ prevdf <-  apply(X = otu_table(PS107_merged),
                  MARGIN = ifelse(taxa_are_rows(PS107_merged), yes = 1, no = 2),
                  FUN = function(x){sum(x > 0)})
 
-# Add taxonomy and total read counts to this data.frame
-prevdf.tax  <-  data.frame(Prevalence = prevdf,
-                      TotalAbundance = taxa_sums(PS107_merged),
-                       tax_table(PS107_merged))
-#summarize
-prevdf.tax.summary <- plyr::ddply(prevdf.tax, "Phylum", function(df1){cbind(mean(df1$Prevalence),sum(df1$Prevalence))})
-
-#plot
-prev_plot_phyl <- ggplot(prevdf.tax, aes(TotalAbundance, Prevalence / nsamples(PS107_merged),color=Phylum)) +
-# Include a guess for parameter
-  geom_hline(yintercept = 0.05, alpha = 0.5, linetype = 2) + geom_point(size = 2, alpha = 0.7) +
-  scale_x_log10() +  xlab("Total Abundance") + ylab("Prevalence [Frac. Samples]") +
-  facet_wrap(~Phylum) + theme(legend.position="none")
+# # Add taxonomy and total read counts to this data.frame
+# prevdf.tax  <-  data.frame(Prevalence = prevdf,
+#                       TotalAbundance = taxa_sums(PS107_merged),
+#                        tax_table(PS107_merged))
+# #summarize
+# prevdf.tax.summary <- plyr::ddply(prevdf.tax, "Phylum", function(df1){cbind(mean(df1$Prevalence),sum(df1$Prevalence))})
+# 
+# #plot
+# prev_plot_phyl <- ggplot(prevdf.tax, aes(TotalAbundance, Prevalence / nsamples(PS107_merged),color=Phylum)) +
+# # Include a guess for parameter
+#   geom_hline(yintercept = 0.05, alpha = 0.5, linetype = 2) + geom_point(size = 2, alpha = 0.7) +
+#   scale_x_log10() +  xlab("Total Abundance") + ylab("Prevalence [Frac. Samples]") +
+#   facet_wrap(~Phylum) + theme(legend.position="none")
 
 #  Define prevalence threshold as 5% of total samples
 prevalenceThreshold <- round(0.05 * nsamples(PS107_merged))
