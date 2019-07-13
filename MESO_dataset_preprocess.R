@@ -35,9 +35,9 @@ source('./Scripts/clr_trans.R')
 #####################################
 #Parse for Phyloseq
 #####################################
-OTU<- read.csv("./dada2_output/bac-arch_seqtab_nochim2.txt", h=T, sep="\t")
-TAX<- as.matrix(read.csv("./dada2_output/bac-arch_taxonomy_table.txt", h=T,sep = "\t"))
-ENV <- read.csv("./dada2_output/MESO_samples_meta1.txt", sep = "\t" , h = T, row.names = 1, fill = T, na.strings=c("","NA"))
+OTU<- read.csv("./dada2_CTD_only/bac-arch_seqtab_nochim2.txt", h=T, sep="\t")
+TAX<- as.matrix(read.csv("./dada2_CTD_only/bac-arch_taxonomy_table.txt", h=T,sep = "\t"))
+ENV <- read.csv("./dada2_CTD_only/MESO_samples_meta.txt", sep = "\t" , h = T, row.names = 1, fill = T, na.strings=c("","NA"))
 
 # Check order of samples
 all.equal(rownames(OTU), rownames(TAX))
@@ -48,10 +48,6 @@ TAX <- tax_table(TAX)
 meta <- sample_data(ENV)
 PS107_merged <- phyloseq(OTU, TAX, meta)
 
-#Subset negative samples and duplicates 
-PS107_merged <- subset_samples(PS107_merged, SelRep == 1)
-PS107_merged <- prune_taxa(taxa_sums(PS107_merged)>0,PS107_merged)
-
 #####################################
 #Fix categories 
 #####################################
@@ -61,7 +57,10 @@ sample_data(PS107_merged)$Community<- factor(
 
 sample_data(PS107_merged)$StationName<- factor(
   sample_data(PS107_merged)$StationName, 
-  levels = c("T1","T2","T3","T4","T5"))
+  levels = c("T4","T1","T2","T3","T5"))
+
+sample_data(PS107_merged)$Type <- factor(sample_data(PS107_merged)$Type, 
+                                      levels = c("Surface-10","Chl.max-20-30","B.Chl.max-50","Epipelagic-100","Mesopelagic-200","Mesopelagic-400"))
 
 #####################################
 #Plot total number of reads and OTUs per sample
