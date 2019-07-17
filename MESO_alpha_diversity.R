@@ -25,13 +25,12 @@ PS107_merged <-  readRDS("./Data/PS107_merged.rds")
 #####################################
 #Plot rarefaction
 ####################################
-#PS107_merged <- subset_samples(PS107_merged,Type!="Sediment")
 iNEXT.out <- iNEXT(as.data.frame(otu_table(PS107_merged)), q=0, datatype="abundance")
 rare <-fortify(iNEXT.out, type=1)
 
 meta <- as(sample_data(PS107_merged), "data.frame")
 meta$site <- rownames(meta)
-rare$Fraction <- meta$Fraction[match(rare$site, meta$site)] 
+rare$Community <- meta$Community[match(rare$site, meta$site)] 
 rare$StationName <- meta$StationName[match(rare$site, meta$site)] 
 rare$Type <- meta$Type[match(rare$site, meta$site)]
 rare$label <- paste(rare$StationName,rare$Type, sep = "-")
@@ -42,22 +41,18 @@ rare.line$method <- factor (rare.line$method,
                             c("interpolated", "extrapolated"),
                             c("interpolation", "extrapolation"))
 
-#exclude sediment samples from the plot
-#rare.line <- rare.line[rare.line$Type!="Sediment",]
-#rare.point <- rare.point[rare.point$Type!="Sediment",]
-
 rare.p <- ggplot(rare, aes(x=x, y=y, colour = site))+
   geom_line(aes(linetype = method), lwd = 0.5, data= rare.line)+
   #geom_ribbon(aes(ymin=y.lwr, ymax= y.upr, colour = NULL), alpha = 0.2)+
-  geom_point(aes(shape=Type, fill=Fraction), size =3, data= rare.point)+
+  geom_point(aes(shape=Type, fill=Community), size =3, data= rare.point)+
   #geom_text(aes(label=label), size =2, data= rare.point, colour = "black", nudge_y = -100)+
   scale_colour_discrete(guide = FALSE)+
   labs(x = "Sample size", y = "Species richness")+
-  facet_grid(~Fraction)+
+  facet_grid(~Community)+
   #xlim(0,1e5)+ylim(0,6000)+
   theme_classic(base_size = 12)+theme(legend.position="bottom")
 
-ggsave("./figures/Figure-rarefaction-sed.pdf", 
+ggsave("./figures/Figure-rarefaction.pdf", 
        plot = rare.p,
        units = "cm",
        #width = 17.8,
@@ -157,9 +152,8 @@ Simpson_stats <- data.frame(SampleID, mean, sd, measure)
 #generate data set with all bacterial community characteristics
 PS107_comm.char<- data.frame(Station = sample_data(PS107_merged)$StationName,
                            Depth = sample_data(PS107_merged)$Depth,
-                           #Type = sample_data(PS107_merged)$Type,
-                           Community = sample_data(PS107_merged)$Fraction,
-                           #Region = sample_data(PS107_merged)$Region,
+                           Type = sample_data(PS107_merged)$Type,
+                           Community = sample_data(PS107_merged)$Community,
                            Sequences= sample_sums(PS107_merged),
                            Observed = paste(round(OTUs_stats$mean,digits=0),round(OTUs_stats$sd,digits=0),sep="\u00B1"),
                            Chao1 = paste(round(rich_stats$mean,digits=0),round(rich_stats$sd,digits=0),sep="\u00B1"),
@@ -171,14 +165,13 @@ PS107_comm.char<- data.frame(Station = sample_data(PS107_merged)$StationName,
 write.csv(PS107_comm.char, "./Data/alpha_table.csv")
 
 #####################################
-#Alpha diversity plots
+#Alpha diversity statistical tests
 ####################################
 #generate the same table with no SD
 PS107_comm.char<- data.frame(Station = sample_data(PS107_merged)$StationName,
-                            Longitude = sample_data(PS107_merged)$Longitude..degrees_east.,
+                            #Longitude = sample_data(PS107_merged)$Longitude..degrees_east.,
                             Type = sample_data(PS107_merged)$Type,
-                            Fraction = sample_data(PS107_merged)$Fraction,
-                            Region = sample_data(PS107_merged)$Region,
+                            Community = sample_data(PS107_merged)$Community,
                             Sequences= sample_sums(PS107_merged),
                             Observed = round(OTUs_stats$mean,digits=0),
                             Chao1 = round(rich_stats$mean,digits=1),
@@ -189,26 +182,29 @@ PS107_comm.char<- data.frame(Station = sample_data(PS107_merged)$StationName,
 
 
 
-#exclude sediment samples from the plots
-PS107_comm.char.no.sed <- PS107_comm.char[PS107_comm.char$Type!="Sediment",]
+
+
+
+
+
+
+
+
 
 #Chao1 plot
-PS107_comm.Chao1.agg <- do.call(data.frame, aggregate(Chao1~ Type +Fraction, PS107_comm.char.no.sed, function(x) c(mean = mean(x), sd = sd(x),median = median(x))))
+PS107_comm.Chao1.agg <- do.call(data.frame, aggregate(Chao1~ Station+Type + Community, PS107_comm.char, function(x) c(mean = mean(x), sd = sd(x),median = median(x))))
 
-PS107_comm.Chao1.agg$Type<- factor(PS107_comm.Chao1.agg$Type, 
-                                  levels = rev(c("SRF", "EPI", "MESO", "BATHY")))
-
-PS107_comm.Chao1.agg$Type <- as.character(PS107_comm.Chao1.agg$Type)
 #plot
-PS107_Chao1 <-   ggplot(PS107_comm.char.no.sed, aes(y = Chao1, x = Type))+
-  geom_point(data = PS107_comm.char.no.sed, aes(y = Chao1, x = Type, group = Fraction, shape = Fraction),colour="black",size = 5) +
-  geom_point(data = PS107_comm.char.no.sed, aes(y = Chao1, x = Type, group = Fraction, colour = Region, shape = Fraction),  size =  4) +
-  geom_point(data = PS107_comm.Chao1.agg, aes(y = Chao1.mean, x =Type, group = Fraction, shape = Fraction), size = 7) + 
-  geom_line(data = PS107_comm.Chao1.agg, aes(y = Chao1.mean, x = Type, group = Fraction, linetype= Fraction), size = 1)+
-  #geom_text(data = PS107_comm.char, aes(y = Chao1, x = Type, label = Station))+
-  scale_x_discrete(limits = c("BATHY","MESO","EPI","SRF"))+
-  coord_flip()+
-  scale_color_manual(values = c("EGC" = "blue", "WSC"="red")) +
+PS107_Chao1 <-   ggplot(PS107_comm.char, aes(y = Chao1, x = Station))+
+  geom_point(data = PS107_comm.char, aes(y = Chao1, x = Station, group = Community, shape = Community),colour="black",size = 5) +
+  geom_point(data = PS107_comm.char, aes(y = Chao1, x = Station, group = Community, colour = Station, shape = Community),  size =  4) +
+  geom_point(data = PS107_comm.Chao1.agg, aes(y = Chao1.mean, x =Station, group = Community, shape = Community), size = 7) + 
+  geom_line(data = PS107_comm.Chao1.agg, aes(y = Chao1.mean, x = Station, group = Community, linetype= Community), size = 1)+
+  geom_text(data = PS107_comm.char, aes(y = Chao1, x = Station, label = Station))+
+  #scale_x_discrete(limits = c("BATHY","MESO","EPI","SRF"))+
+  #coord_flip()+
+  facet_grid(Type~.)+
+  #scale_color_manual(values = c("EGC" = "blue", "WSC"="red")) +
   xlab("Depth")+
   ylab("Chao1 Species Estimator")+
   theme_classic()+
@@ -216,7 +212,7 @@ PS107_Chao1 <-   ggplot(PS107_comm.char.no.sed, aes(y = Chao1, x = Type))+
 
 
 #Pielou's evenness (J)
-PS107_comm.evenness.agg <- do.call(data.frame, aggregate(Evenness~ Type +Fraction, PS107_comm.char.no.sed, function(x) c(mean = mean(x), sd = sd(x), median = median(x))))
+PS107_comm.evenness.agg <- do.call(data.frame, aggregate(Evenness~ Station+Type +Community, PS107_comm.char, function(x) c(mean = mean(x), sd = sd(x), median = median(x))))
 
 PS107_comm.evenness.agg$Type<- factor(
   PS107_comm.evenness.agg$Type, 
@@ -224,17 +220,18 @@ PS107_comm.evenness.agg$Type<- factor(
 
 #plot
 PS107_evenness <-   ggplot()+
-  geom_point(data = PS107_comm.char.no.sed, aes(y = Evenness, x = Type, group = Fraction, shape = Fraction),colour="black",size = 5)+
-  geom_point(data = PS107_comm.char.no.sed, aes(y = Evenness, x = Type, group = Fraction, colour = Region, shape = Fraction), size = 4) +
-  geom_point(data = PS107_comm.evenness.agg, aes(y = Evenness.mean, x = Type, group = Fraction, shape = Fraction), size = 7) +  
-  geom_line(data = PS107_comm.evenness.agg, aes(y = Evenness.mean, x = Type, group = Fraction, linetype= Fraction), size = 1)+
+  geom_point(data = PS107_comm.char, aes(y = Evenness, x = Station, group = Community, shape = Community),colour="black",size = 5)+
+  geom_point(data = PS107_comm.char, aes(y = Evenness, x = Station, group = Community,  shape = Community), size = 4) +
+  geom_point(data = PS107_comm.evenness.agg, aes(y = Evenness.mean, x = Station, group = Community, shape = Community), size = 4) +  
+  geom_line(data = PS107_comm.evenness.agg, aes(y = Evenness.mean, x = Station, group = Community, linetype= Community), size = 1)+
   #geom_text(data = PS107_comm.char, aes(y = Evenness, x = Type, label = Station))+
-  scale_x_discrete(limits = c("BATHY","MESO","EPI","SRF"))+
-  coord_flip()+
-  xlab("Depth")+
-  scale_color_manual(values = c("EGC" = "blue", "WSC"="red")) +
+  #scale_x_discrete(limits = c("BATHY","MESO","EPI","SRF"))+
+  #coord_flip()+
+  facet_grid(Type~.)+
+  #xlab("Depth")+
+  #scale_color_manual(values = c("EGC" = "blue", "WSC"="red")) +
   ylab("Pielou's evenness index (J)")+
-  theme_classic()+
+  theme_bw()+
   theme(legend.position = "none")
 
 #combined plot
@@ -248,69 +245,13 @@ ggsave("./figures/Figure-alpha.pdf",
        #height = 17.4,
        dpi = 300)
 
-#####################################
-#Statistical tests
-#####################################
-PS107_comm.char_FL <- PS107_comm.char.no.sed[PS107_comm.char.no.sed$Fraction=="FL",]
-PS107_comm.char_PA <- PS107_comm.char.no.sed[PS107_comm.char.no.sed$Fraction=="PA",]
-
-#compare richness throughout the water column
-#FL
-wilcox.test(PS107_comm.char_FL[PS107_comm.char_FL$Type=="SRF",]$Chao1,
-            PS107_comm.char_FL[PS107_comm.char_FL$Type=="EPI",]$Chao1)
-wilcox.test(PS107_comm.char_FL[PS107_comm.char_FL$Type=="EPI",]$Chao1,
-            PS107_comm.char_FL[PS107_comm.char_FL$Type=="MESO",]$Chao1)
-wilcox.test(PS107_comm.char_FL[PS107_comm.char_FL$Type=="MESO",]$Chao1,
-            PS107_comm.char_FL[PS107_comm.char_FL$Type=="BATHY",]$Chao1)
-
-#PA
-wilcox.test(PS107_comm.char_PA[PS107_comm.char_PA$Type=="SRF",]$Chao1,
-            PS107_comm.char_PA[PS107_comm.char_PA$Type=="EPI",]$Chao1)
-wilcox.test(PS107_comm.char_PA[PS107_comm.char_PA$Type=="EPI",]$Chao1,
-            PS107_comm.char_PA[PS107_comm.char_PA$Type=="MESO",]$Chao1)
-wilcox.test(PS107_comm.char_PA[PS107_comm.char_PA$Type=="MESO",]$Chao1,
-            PS107_comm.char_PA[PS107_comm.char_PA$Type=="BATHY",]$Chao1)
-
-#compare richness between fractions
-wilcox.test(PS107_comm.char_FL[PS107_comm.char_FL$Type=="SRF",]$Chao1,
-            PS107_comm.char_PA[PS107_comm.char_PA$Type=="SRF",]$Chao1)
-
-wilcox.test(PS107_comm.char_FL[PS107_comm.char_FL$Type=="EPI",]$Chao1,
-            PS107_comm.char_PA[PS107_comm.char_PA$Type=="EPI",]$Chao1)
-
-wilcox.test(PS107_comm.char_FL[PS107_comm.char_FL$Type=="MESO",]$Chao1,
-            PS107_comm.char_PA[PS107_comm.char_PA$Type=="MESO",]$Chao1)
-
-wilcox.test(PS107_comm.char_FL[PS107_comm.char_FL$Type=="BATHY",]$Chao1,
-            PS107_comm.char_PA[PS107_comm.char_PA$Type=="BATHY",]$Chao1)
-
-
-#compare eveness throughout the water column
-#FL
-wilcox.test(PS107_comm.char_FL[PS107_comm.char_FL$Type=="SRF",]$Evenness,
-            PS107_comm.char_FL[PS107_comm.char_FL$Type=="EPI",]$Evenness)
-wilcox.test(PS107_comm.char_FL[PS107_comm.char_FL$Type=="EPI",]$Evenness,
-            PS107_comm.char_FL[PS107_comm.char_FL$Type=="MESO",]$Evenness)
-wilcox.test(PS107_comm.char_FL[PS107_comm.char_FL$Type=="MESO",]$Evenness,
-            PS107_comm.char_FL[PS107_comm.char_FL$Type=="BATHY",]$Evenness)
-
-#PA
-wilcox.test(PS107_comm.char_PA[PS107_comm.char_PA$Type=="SRF",]$Evenness,
-            PS107_comm.char_PA[PS107_comm.char_PA$Type=="EPI",]$Evenness)
-wilcox.test(PS107_comm.char_PA[PS107_comm.char_PA$Type=="EPI",]$Evenness,
-            PS107_comm.char_PA[PS107_comm.char_PA$Type=="MESO",]$Evenness)
-wilcox.test(PS107_comm.char_PA[PS107_comm.char_PA$Type=="MESO",]$Evenness,
-            PS107_comm.char_PA[PS107_comm.char_PA$Type=="BATHY",]$Evenness)
 
 #####################################
 #OTU distribution
 #####################################
-PS107_merged.no.sed <- subset_samples(PS107_merged, Type!="Sediment")
-PS107_merged.no.sed <- prune_taxa(taxa_sums(PS107_merged.no.sed)>0,PS107_merged.no.sed)
-
 for (frac in c("FL","PA")){
   #mean number of OTU per sample
-  PS107_merged_sub <- subset_samples(PS107_merged.no.sed, Fraction== frac)
+  PS107_merged_sub <- subset_samples(PS107_merged, Community== frac)
   PS107_merged_sub <- prune_taxa(taxa_sums(PS107_merged_sub)>0, PS107_merged_sub)
   
   vectorx <- vector()

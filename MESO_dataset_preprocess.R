@@ -57,7 +57,7 @@ sample_data(PS107_merged)$Community<- factor(
 
 sample_data(PS107_merged)$StationName<- factor(
   sample_data(PS107_merged)$StationName, 
-  levels = c("T4","T1","T2","T3","T5"))
+  levels = c("T4","T1","T2","T5","T3"))
 
 sample_data(PS107_merged)$Type <- factor(sample_data(PS107_merged)$Type, 
                                       levels = c("Surface-10","Chl.max-20-30","B.Chl.max-50","Epipelagic-100","Mesopelagic-200","Mesopelagic-400"))
