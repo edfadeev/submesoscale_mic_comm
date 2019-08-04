@@ -1,0 +1,559 @@
+Loading required package: dada2
+Loading required package: Rcpp
+Loading required package: ShortRead
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, basename, cbind, colMeans,
+    colnames, colSums, dirname, do.call, duplicated, eval, evalq,
+    Filter, Find, get, grep, grepl, intersect, is.unsorted, lapply,
+    lengths, Map, mapply, match, mget, order, paste, pmax, pmax.int,
+    pmin, pmin.int, Position, rank, rbind, Reduce, rowMeans, rownames,
+    rowSums, sapply, setdiff, sort, table, tapply, union, unique,
+    unsplit, which, which.max, which.min
+
+Loading required package: BiocParallel
+Loading required package: Biostrings
+Loading required package: S4Vectors
+Loading required package: stats4
+
+Attaching package: ‘S4Vectors’
+
+The following object is masked from ‘package:base’:
+
+    expand.grid
+
+Loading required package: IRanges
+Loading required package: XVector
+
+Attaching package: ‘Biostrings’
+
+The following object is masked from ‘package:base’:
+
+    strsplit
+
+Loading required package: Rsamtools
+Loading required package: GenomeInfoDb
+Loading required package: GenomicRanges
+Loading required package: GenomicAlignments
+Loading required package: SummarizedExperiment
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+Loading required package: DelayedArray
+Loading required package: matrixStats
+
+Attaching package: ‘matrixStats’
+
+The following objects are masked from ‘package:Biobase’:
+
+    anyMissing, rowMedians
+
+
+Attaching package: ‘DelayedArray’
+
+The following objects are masked from ‘package:matrixStats’:
+
+    colMaxs, colMins, colRanges, rowMaxs, rowMins, rowRanges
+
+The following object is masked from ‘package:Biostrings’:
+
+    type
+
+The following objects are masked from ‘package:base’:
+
+    aperm, apply
+
+Loading required package: ggplot2
+Loading required package: gridExtra
+
+Attaching package: ‘gridExtra’
+
+The following object is masked from ‘package:Biobase’:
+
+    combine
+
+The following object is masked from ‘package:BiocGenerics’:
+
+    combine
+
+  [1] "1_clip_R1.fastq"  "1_clip_R2.fastq"  "10_clip_R1.fastq"
+  [4] "10_clip_R2.fastq" "11_clip_R1.fastq" "11_clip_R2.fastq"
+  [7] "12_clip_R1.fastq" "12_clip_R2.fastq" "13_clip_R1.fastq"
+ [10] "13_clip_R2.fastq" "14_clip_R1.fastq" "14_clip_R2.fastq"
+ [13] "15_clip_R1.fastq" "15_clip_R2.fastq" "16_clip_R1.fastq"
+ [16] "16_clip_R2.fastq" "17_clip_R1.fastq" "17_clip_R2.fastq"
+ [19] "18_clip_R1.fastq" "18_clip_R2.fastq" "19_clip_R1.fastq"
+ [22] "19_clip_R2.fastq" "2_clip_R1.fastq"  "2_clip_R2.fastq" 
+ [25] "20_clip_R1.fastq" "20_clip_R2.fastq" "21_clip_R1.fastq"
+ [28] "21_clip_R2.fastq" "22_clip_R1.fastq" "22_clip_R2.fastq"
+ [31] "23_clip_R1.fastq" "23_clip_R2.fastq" "24_clip_R1.fastq"
+ [34] "24_clip_R2.fastq" "25_clip_R1.fastq" "25_clip_R2.fastq"
+ [37] "26_clip_R1.fastq" "26_clip_R2.fastq" "27_clip_R1.fastq"
+ [40] "27_clip_R2.fastq" "28_clip_R1.fastq" "28_clip_R2.fastq"
+ [43] "29_clip_R1.fastq" "29_clip_R2.fastq" "3_clip_R1.fastq" 
+ [46] "3_clip_R2.fastq"  "30_clip_R1.fastq" "30_clip_R2.fastq"
+ [49] "31_clip_R1.fastq" "31_clip_R2.fastq" "32_clip_R1.fastq"
+ [52] "32_clip_R2.fastq" "33_clip_R1.fastq" "33_clip_R2.fastq"
+ [55] "34_clip_R1.fastq" "34_clip_R2.fastq" "35_clip_R1.fastq"
+ [58] "35_clip_R2.fastq" "36_clip_R1.fastq" "36_clip_R2.fastq"
+ [61] "37_clip_R1.fastq" "37_clip_R2.fastq" "38_clip_R1.fastq"
+ [64] "38_clip_R2.fastq" "39_clip_R1.fastq" "39_clip_R2.fastq"
+ [67] "4_clip_R1.fastq"  "4_clip_R2.fastq"  "40_clip_R1.fastq"
+ [70] "40_clip_R2.fastq" "41_clip_R1.fastq" "41_clip_R2.fastq"
+ [73] "42_clip_R1.fastq" "42_clip_R2.fastq" "43_clip_R1.fastq"
+ [76] "43_clip_R2.fastq" "44_clip_R1.fastq" "44_clip_R2.fastq"
+ [79] "45_clip_R1.fastq" "45_clip_R2.fastq" "46_clip_R1.fastq"
+ [82] "46_clip_R2.fastq" "47_clip_R1.fastq" "47_clip_R2.fastq"
+ [85] "48_clip_R1.fastq" "48_clip_R2.fastq" "49_clip_R1.fastq"
+ [88] "49_clip_R2.fastq" "5_clip_R1.fastq"  "5_clip_R2.fastq" 
+ [91] "50_clip_R1.fastq" "50_clip_R2.fastq" "51_clip_R1.fastq"
+ [94] "51_clip_R2.fastq" "52_clip_R1.fastq" "52_clip_R2.fastq"
+ [97] "53_clip_R1.fastq" "53_clip_R2.fastq" "54_clip_R1.fastq"
+[100] "54_clip_R2.fastq" "55_clip_R1.fastq" "55_clip_R2.fastq"
+[103] "56_clip_R1.fastq" "56_clip_R2.fastq" "57_clip_R1.fastq"
+[106] "57_clip_R2.fastq" "58_clip_R1.fastq" "58_clip_R2.fastq"
+[109] "59_clip_R1.fastq" "59_clip_R2.fastq" "6_clip_R1.fastq" 
+[112] "6_clip_R2.fastq"  "60_clip_R1.fastq" "60_clip_R2.fastq"
+[115] "7_clip_R1.fastq"  "7_clip_R2.fastq"  "8_clip_R1.fastq" 
+[118] "8_clip_R2.fastq"  "9_clip_R1.fastq"  "9_clip_R2.fastq" 
+null device 
+          1 
+null device 
+          1 
+                 reads.in reads.out
+1_clip_R1.fastq     71203     62125
+10_clip_R1.fastq   173274    146911
+11_clip_R1.fastq   141169    123098
+12_clip_R1.fastq   108207     92951
+13_clip_R1.fastq    92343     75858
+14_clip_R1.fastq   154220    133401
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.7891  0.8390  0.8566  0.8530  0.8703  0.8839 
+null device 
+          1 
+null device 
+          1 
+117446970 total bases in 510639 reads from 5 samples will be used for learning the error rates.
+Initializing error rates to maximum possible estimate.
+selfConsist step 1 .....
+   selfConsist step 2
+   selfConsist step 3
+   selfConsist step 4
+   selfConsist step 5
+   selfConsist step 6
+Convergence after  6  rounds.
+112446560 total bases in 591824 reads from 5 samples will be used for learning the error rates.
+Initializing error rates to maximum possible estimate.
+selfConsist step 1 .....
+   selfConsist step 2
+   selfConsist step 3
+   selfConsist step 4
+   selfConsist step 5
+Convergence after  5  rounds.
+Warning messages:
+1: Transformation introduced infinite values in continuous y-axis 
+2: Transformation introduced infinite values in continuous y-axis 
+Warning message:
+Transformation introduced infinite values in continuous y-axis 
+null device 
+          1 
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X1_F_filt.fastq
+Encountered 17758 unique sequences from 62125 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X10_F_filt.fastq
+Encountered 39708 unique sequences from 146911 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X11_F_filt.fastq
+Encountered 26930 unique sequences from 123098 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X12_F_filt.fastq
+Encountered 23572 unique sequences from 92951 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X13_F_filt.fastq
+Encountered 25518 unique sequences from 75858 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X14_F_filt.fastq
+Encountered 32341 unique sequences from 133401 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X15_F_filt.fastq
+Encountered 43720 unique sequences from 146548 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X16_F_filt.fastq
+Encountered 60536 unique sequences from 270598 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X17_F_filt.fastq
+Encountered 22986 unique sequences from 72886 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X18_F_filt.fastq
+Encountered 66809 unique sequences from 329999 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X19_F_filt.fastq
+Encountered 35162 unique sequences from 123932 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X2_F_filt.fastq
+Encountered 25153 unique sequences from 68197 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X20_F_filt.fastq
+Encountered 21139 unique sequences from 85814 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X21_F_filt.fastq
+Encountered 22585 unique sequences from 90275 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X22_F_filt.fastq
+Encountered 15288 unique sequences from 66362 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X23_F_filt.fastq
+Encountered 22099 unique sequences from 52508 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X24_F_filt.fastq
+Encountered 39672 unique sequences from 122089 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X25_F_filt.fastq
+Encountered 73755 unique sequences from 318706 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X26_F_filt.fastq
+Encountered 46783 unique sequences from 145811 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X27_F_filt.fastq
+Encountered 46386 unique sequences from 187093 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X28_F_filt.fastq
+Encountered 20918 unique sequences from 59812 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X29_F_filt.fastq
+Encountered 36563 unique sequences from 150973 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X3_F_filt.fastq
+Encountered 34408 unique sequences from 135116 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X30_F_filt.fastq
+Encountered 44501 unique sequences from 190719 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X31_F_filt.fastq
+Encountered 36294 unique sequences from 159679 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X32_F_filt.fastq
+Encountered 39662 unique sequences from 182161 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X33_F_filt.fastq
+Encountered 18916 unique sequences from 88355 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X34_F_filt.fastq
+Encountered 47796 unique sequences from 140517 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X35_F_filt.fastq
+Encountered 37254 unique sequences from 128781 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X36_F_filt.fastq
+Encountered 30021 unique sequences from 90078 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X37_F_filt.fastq
+Encountered 42497 unique sequences from 174730 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X38_F_filt.fastq
+Encountered 35913 unique sequences from 122186 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X39_F_filt.fastq
+Encountered 29690 unique sequences from 119223 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X4_F_filt.fastq
+Encountered 32095 unique sequences from 93475 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X40_F_filt.fastq
+Encountered 25860 unique sequences from 78938 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X41_F_filt.fastq
+Encountered 30621 unique sequences from 127228 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X42_F_filt.fastq
+Encountered 38874 unique sequences from 132078 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X43_F_filt.fastq
+Encountered 21342 unique sequences from 80426 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X44_F_filt.fastq
+Encountered 45701 unique sequences from 208671 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X45_F_filt.fastq
+Encountered 38246 unique sequences from 116129 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X46_F_filt.fastq
+Encountered 27284 unique sequences from 82866 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X47_F_filt.fastq
+Encountered 21869 unique sequences from 73241 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X48_F_filt.fastq
+Encountered 25791 unique sequences from 82306 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X49_F_filt.fastq
+Encountered 27723 unique sequences from 107630 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X5_F_filt.fastq
+Encountered 29332 unique sequences from 123999 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X50_F_filt.fastq
+Encountered 27745 unique sequences from 101351 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X51_F_filt.fastq
+Encountered 42093 unique sequences from 163800 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X52_F_filt.fastq
+Encountered 23235 unique sequences from 90236 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X53_F_filt.fastq
+Encountered 42547 unique sequences from 206152 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X54_F_filt.fastq
+Encountered 18849 unique sequences from 74855 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X55_F_filt.fastq
+Encountered 41788 unique sequences from 199874 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X56_F_filt.fastq
+Encountered 39368 unique sequences from 119502 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X57_F_filt.fastq
+Encountered 37048 unique sequences from 107142 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X58_F_filt.fastq
+Encountered 42934 unique sequences from 118035 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X59_F_filt.fastq
+Encountered 34328 unique sequences from 70478 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X6_F_filt.fastq
+Encountered 24607 unique sequences from 79970 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X60_F_filt.fastq
+Encountered 5715 unique sequences from 17285 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X7_F_filt.fastq
+Encountered 26158 unique sequences from 112958 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X8_F_filt.fastq
+Encountered 27594 unique sequences from 92579 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X9_F_filt.fastq
+Encountered 20465 unique sequences from 100051 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X1_R_filt.fastq
+Encountered 19795 unique sequences from 62125 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X10_R_filt.fastq
+Encountered 39030 unique sequences from 146911 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X11_R_filt.fastq
+Encountered 32020 unique sequences from 123098 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X12_R_filt.fastq
+Encountered 24881 unique sequences from 92951 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X13_R_filt.fastq
+Encountered 26832 unique sequences from 75858 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X14_R_filt.fastq
+Encountered 36383 unique sequences from 133401 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X15_R_filt.fastq
+Encountered 48607 unique sequences from 146548 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X16_R_filt.fastq
+Encountered 76301 unique sequences from 270598 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X17_R_filt.fastq
+Encountered 26320 unique sequences from 72886 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X18_R_filt.fastq
+Encountered 82579 unique sequences from 329999 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X19_R_filt.fastq
+Encountered 39747 unique sequences from 123932 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X2_R_filt.fastq
+Encountered 25487 unique sequences from 68197 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X20_R_filt.fastq
+Encountered 24171 unique sequences from 85814 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X21_R_filt.fastq
+Encountered 22819 unique sequences from 90275 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X22_R_filt.fastq
+Encountered 18009 unique sequences from 66362 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X23_R_filt.fastq
+Encountered 21614 unique sequences from 52508 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X24_R_filt.fastq
+Encountered 39805 unique sequences from 122089 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X25_R_filt.fastq
+Encountered 79735 unique sequences from 318706 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X26_R_filt.fastq
+Encountered 47384 unique sequences from 145811 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X27_R_filt.fastq
+Encountered 52271 unique sequences from 187093 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X28_R_filt.fastq
+Encountered 22032 unique sequences from 59812 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X29_R_filt.fastq
+Encountered 43226 unique sequences from 150973 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X3_R_filt.fastq
+Encountered 37711 unique sequences from 135116 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X30_R_filt.fastq
+Encountered 53411 unique sequences from 190719 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X31_R_filt.fastq
+Encountered 43266 unique sequences from 159679 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X32_R_filt.fastq
+Encountered 45997 unique sequences from 182161 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X33_R_filt.fastq
+Encountered 22723 unique sequences from 88355 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X34_R_filt.fastq
+Encountered 52497 unique sequences from 140517 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X35_R_filt.fastq
+Encountered 44414 unique sequences from 128781 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X36_R_filt.fastq
+Encountered 32969 unique sequences from 90078 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X37_R_filt.fastq
+Encountered 51907 unique sequences from 174730 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X38_R_filt.fastq
+Encountered 40676 unique sequences from 122186 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X39_R_filt.fastq
+Encountered 32873 unique sequences from 119223 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X4_R_filt.fastq
+Encountered 32270 unique sequences from 93475 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X40_R_filt.fastq
+Encountered 26102 unique sequences from 78938 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X41_R_filt.fastq
+Encountered 36295 unique sequences from 127228 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X42_R_filt.fastq
+Encountered 41562 unique sequences from 132078 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X43_R_filt.fastq
+Encountered 22753 unique sequences from 80426 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X44_R_filt.fastq
+Encountered 51829 unique sequences from 208671 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X45_R_filt.fastq
+Encountered 38366 unique sequences from 116129 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X46_R_filt.fastq
+Encountered 23533 unique sequences from 82866 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X47_R_filt.fastq
+Encountered 23840 unique sequences from 73241 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X48_R_filt.fastq
+Encountered 28353 unique sequences from 82306 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X49_R_filt.fastq
+Encountered 31077 unique sequences from 107630 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X5_R_filt.fastq
+Encountered 33661 unique sequences from 123999 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X50_R_filt.fastq
+Encountered 30400 unique sequences from 101351 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X51_R_filt.fastq
+Encountered 45819 unique sequences from 163800 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X52_R_filt.fastq
+Encountered 25310 unique sequences from 90236 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X53_R_filt.fastq
+Encountered 49078 unique sequences from 206152 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X54_R_filt.fastq
+Encountered 18995 unique sequences from 74855 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X55_R_filt.fastq
+Encountered 48038 unique sequences from 199874 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X56_R_filt.fastq
+Encountered 29643 unique sequences from 119502 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X57_R_filt.fastq
+Encountered 26393 unique sequences from 107142 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X58_R_filt.fastq
+Encountered 28232 unique sequences from 118035 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X59_R_filt.fastq
+Encountered 18452 unique sequences from 70478 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X6_R_filt.fastq
+Encountered 26264 unique sequences from 79970 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X60_R_filt.fastq
+Encountered 4306 unique sequences from 17285 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X7_R_filt.fastq
+Encountered 29441 unique sequences from 112958 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X8_R_filt.fastq
+Encountered 26211 unique sequences from 92579 total sequences read.
+Dereplicating sequence entries in Fastq file: /scratch2/efadeev/mesoscale/dada2_310719/Clipped//../Filtered/X9_R_filt.fastq
+Encountered 25089 unique sequences from 100051 total sequences read.
+60 samples were pooled: 7418747 reads in 1300444 unique sequences.
+60 samples were pooled: 7418747 reads in 1444485 unique sequences.
+54365 paired-reads (in 3127 unique pairings) successfully merged out of 57313 (in 4289 pairings) input.
+125521 paired-reads (in 1852 unique pairings) successfully merged out of 146413 (in 3411 pairings) input.
+105862 paired-reads (in 1770 unique pairings) successfully merged out of 122763 (in 2908 pairings) input.
+61705 paired-reads (in 1336 unique pairings) successfully merged out of 92648 (in 2395 pairings) input.
+46987 paired-reads (in 2392 unique pairings) successfully merged out of 75283 (in 4570 pairings) input.
+117572 paired-reads (in 2989 unique pairings) successfully merged out of 123353 (in 4008 pairings) input.
+96989 paired-reads (in 2893 unique pairings) successfully merged out of 145295 (in 6292 pairings) input.
+237412 paired-reads (in 4985 unique pairings) successfully merged out of 251725 (in 8766 pairings) input.
+40028 paired-reads (in 1871 unique pairings) successfully merged out of 72207 (in 3821 pairings) input.
+290878 paired-reads (in 4888 unique pairings) successfully merged out of 307024 (in 8476 pairings) input.
+76438 paired-reads (in 1795 unique pairings) successfully merged out of 123457 (in 4405 pairings) input.
+37720 paired-reads (in 2223 unique pairings) successfully merged out of 67615 (in 4488 pairings) input.
+82175 paired-reads (in 2134 unique pairings) successfully merged out of 85400 (in 3428 pairings) input.
+74398 paired-reads (in 1393 unique pairings) successfully merged out of 90007 (in 2253 pairings) input.
+63699 paired-reads (in 1189 unique pairings) successfully merged out of 66208 (in 1928 pairings) input.
+31736 paired-reads (in 2434 unique pairings) successfully merged out of 51784 (in 4247 pairings) input.
+87216 paired-reads (in 2551 unique pairings) successfully merged out of 121255 (in 5240 pairings) input.
+290558 paired-reads (in 4903 unique pairings) successfully merged out of 304033 (in 8960 pairings) input.
+100523 paired-reads (in 2790 unique pairings) successfully merged out of 144628 (in 6099 pairings) input.
+168381 paired-reads (in 4400 unique pairings) successfully merged out of 177938 (in 7702 pairings) input.
+34984 paired-reads (in 1706 unique pairings) successfully merged out of 59350 (in 3894 pairings) input.
+132563 paired-reads (in 3571 unique pairings) successfully merged out of 140767 (in 5741 pairings) input.
+116224 paired-reads (in 3980 unique pairings) successfully merged out of 124012 (in 6013 pairings) input.
+149178 paired-reads (in 2441 unique pairings) successfully merged out of 189995 (in 4923 pairings) input.
+149801 paired-reads (in 3336 unique pairings) successfully merged out of 157418 (in 5499 pairings) input.
+155326 paired-reads (in 2139 unique pairings) successfully merged out of 181540 (in 4001 pairings) input.
+84632 paired-reads (in 1722 unique pairings) successfully merged out of 88008 (in 2583 pairings) input.
+79342 paired-reads (in 2508 unique pairings) successfully merged out of 139024 (in 5840 pairings) input.
+110701 paired-reads (in 4433 unique pairings) successfully merged out of 123906 (in 7321 pairings) input.
+61604 paired-reads (in 2095 unique pairings) successfully merged out of 89481 (in 3898 pairings) input.
+159582 paired-reads (in 4021 unique pairings) successfully merged out of 167096 (in 6638 pairings) input.
+91682 paired-reads (in 2083 unique pairings) successfully merged out of 121459 (in 4422 pairings) input.
+105343 paired-reads (in 3275 unique pairings) successfully merged out of 111139 (in 4872 pairings) input.
+54444 paired-reads (in 2377 unique pairings) successfully merged out of 92751 (in 5209 pairings) input.
+53522 paired-reads (in 2045 unique pairings) successfully merged out of 78552 (in 4055 pairings) input.
+118781 paired-reads (in 3339 unique pairings) successfully merged out of 123702 (in 4894 pairings) input.
+75932 paired-reads (in 1818 unique pairings) successfully merged out of 131578 (in 4342 pairings) input.
+63244 paired-reads (in 1373 unique pairings) successfully merged out of 80161 (in 2231 pairings) input.
+195503 paired-reads (in 3381 unique pairings) successfully merged out of 206617 (in 5476 pairings) input.
+99944 paired-reads (in 4030 unique pairings) successfully merged out of 113321 (in 6844 pairings) input.
+31852 paired-reads (in 1450 unique pairings) successfully merged out of 82468 (in 3436 pairings) input.
+65134 paired-reads (in 3196 unique pairings) successfully merged out of 70162 (in 4852 pairings) input.
+67810 paired-reads (in 1833 unique pairings) successfully merged out of 81700 (in 3149 pairings) input.
+95173 paired-reads (in 3384 unique pairings) successfully merged out of 102070 (in 5066 pairings) input.
+105100 paired-reads (in 3499 unique pairings) successfully merged out of 112919 (in 5595 pairings) input.
+86279 paired-reads (in 1673 unique pairings) successfully merged out of 100766 (in 3061 pairings) input.
+147388 paired-reads (in 3849 unique pairings) successfully merged out of 156907 (in 6274 pairings) input.
+78914 paired-reads (in 1701 unique pairings) successfully merged out of 89867 (in 2911 pairings) input.
+199520 paired-reads (in 2630 unique pairings) successfully merged out of 205579 (in 4334 pairings) input.
+39569 paired-reads (in 905 unique pairings) successfully merged out of 74672 (in 1538 pairings) input.
+192025 paired-reads (in 2940 unique pairings) successfully merged out of 198922 (in 5382 pairings) input.
+112823 paired-reads (in 3320 unique pairings) successfully merged out of 117230 (in 5304 pairings) input.
+104075 paired-reads (in 634 unique pairings) successfully merged out of 106592 (in 843 pairings) input.
+110218 paired-reads (in 3195 unique pairings) successfully merged out of 115891 (in 5327 pairings) input.
+52486 paired-reads (in 1291 unique pairings) successfully merged out of 70077 (in 2151 pairings) input.
+51027 paired-reads (in 1823 unique pairings) successfully merged out of 79465 (in 3776 pairings) input.
+17241 paired-reads (in 40 unique pairings) successfully merged out of 17280 (in 52 pairings) input.
+108218 paired-reads (in 2346 unique pairings) successfully merged out of 112056 (in 3960 pairings) input.
+67240 paired-reads (in 1181 unique pairings) successfully merged out of 92275 (in 2702 pairings) input.
+97346 paired-reads (in 1700 unique pairings) successfully merged out of 99801 (in 2631 pairings) input.
+[1]    60 15039
+Identified 9199 bimeras out of 15039 input sequences.
+[1]   60 5840
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.9456  0.9617  0.9770  0.9761  0.9902  0.9948 
+
+    239     247     251     254     256     259     261     267     275     277 
+    110       7      23       5       7       3       2       6       6      28 
+    278     283     289     291     294     296     298     299     300     315 
+    204      15       3       6       2       2      17       3       2       8 
+    321     325     327     329     338     342     349     351     352     354 
+      2       9       2       2      39       7       3      55       7     524 
+    355     357     359     360     362     363     364     365     366     367 
+     17       4      20      91      10     146     384    6238  137127   15187 
+    368     369     370     371     372     373     374     375     376     377 
+ 307409   94902 1158844  205575  517086 1217471 1070448   78633  317631  793392 
+    378     379     380     381     382     383     384     385     386     387 
+   3884     292     720    3209     148     720    1300      15     355     271 
+    388     389     390     391     392     393     394     395     396     397 
+     11      75      45       5     144     304      53     134       6       6 
+    398     399     402     403     404     405     406     407     408     409 
+     40      19     122     102      10      17      69      93      52     239 
+    410 
+    368 
+[1]   60 5304
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.9899  0.9986  0.9996  0.9988  0.9999  0.9999 
+     input filtered denoised merged nochim tabled
+X1   71203    62125    57475  54365  52095  52083
+X10 173274   146911   146635 125521 122338 122228
+X11 141169   123098   122889 105862 103617 103571
+X12 108207    92951    92801  61705  60399  60325
+X13  92343    75858    75433  46987  46424  46378
+X14 154220   133401   123457 117572 114601 114587
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.3076  0.5642  0.7087  0.6679  0.7531  0.8423 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.7891  0.8390  0.8566  0.8530  0.8703  0.8839 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.9134  0.9718  0.9943  0.9812  0.9975  1.0000 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.3856  0.6856  0.8771  0.8191  0.9480  0.9975 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.9456  0.9617  0.9770  0.9761  0.9902  0.9948 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.9899  0.9986  0.9996  0.9988  0.9999  0.9999 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  17034   62251   91490   98831  114760  278459 
+      Kingdom                Phylum                     Class     
+ Archaea  : 468   Proteobacteria:2452   Alphaproteobacteria:1219  
+ Bacteria :4796   Bacteroidetes : 545   Gammaproteobacteria: 770  
+ Eukaryota:  21   Thaumarchaeota: 355   Bacteroidia        : 542  
+ NA's     :  19   Cyanobacteria : 326   Deltaproteobacteria: 422  
+                  Planctomycetes: 292   Nitrososphaeria    : 352  
+                  (Other)       :1214   (Other)            :1437  
+                  NA's          : 120   NA's               : 562  
+              Order                    Family    
+ SAR11_clade     : 494   Nitrosopumilaceae: 352  
+ Flavobacteriales: 433   Clade_II         : 233  
+ Nitrosopumilales: 352   Clade_I          : 172  
+ Chloroplast     : 313   NS9_marine_group : 167  
+ Rhodospirillales: 230   Flavobacteriaceae: 145  
+ (Other)         :2528   (Other)          :2136  
+ NA's            : 954   NA's             :2099  
+                       Genus     
+ Candidatus_Nitrosopumilus: 254  
+ OM27_clade               : 128  
+ Clade_Ia                 :  72  
+ Clade_Ib                 :  72  
+ Nitrospina               :  65  
+ (Other)                  :1168  
+ NA's                     :3545  
+
+  Archaea  Bacteria Eukaryota 
+      468      4796        21 
+[1] 120
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  17034   54620   88495   93825  111253  278263 
+[1] TRUE

@@ -30,14 +30,13 @@ library(ggplot2); packageVersion("ggplot2")
 
 #load functions
 source('./scripts/miseqR.R')
-source('./Scripts/clr_trans.R')
 
 #####################################
 #Parse for Phyloseq
 #####################################
-OTU<- read.csv("./dada2_CTD_only/bac-arch_seqtab_nochim2.txt", h=T, sep="\t")
-TAX<- as.matrix(read.csv("./dada2_CTD_only/bac-arch_taxonomy_table.txt", h=T,sep = "\t"))
-ENV <- read.csv("./dada2_CTD_only/MESO_samples_meta.txt", sep = "\t" , h = T, row.names = 1, fill = T, na.strings=c("","NA"))
+OTU<- read.csv("./dada2_310719//bac-arch_seqtab_nochim2.txt", h=T, sep="\t")
+TAX<- as.matrix(read.csv("./dada2_310719/bac-arch_taxonomy_table.txt", h=T,sep = "\t"))
+ENV <- read.csv("./dada2_310719/MESO_samples_meta.csv", sep = "," , h = T, row.names = 1, fill = T, na.strings=c("","NA"))
 
 # Check order of samples
 all.equal(rownames(OTU), rownames(TAX))
@@ -139,6 +138,20 @@ saveRDS(PS107_merged.prev.vst, "./Data/PS107_merged_prev_vst.rds")
 saveRDS(PS107_merged.vst, "./Data/PS107_merged_vst.rds")
 saveRDS(PS107_merged, "./Data/PS107_merged.rds")
 saveRDS(PS107_merged.prev, "./Data/PS107_merged_prev.rds")
+
+
+#####################################
+# export for Source Tracker on Aphros
+#####################################
+#raw table
+#export tables for Aphros
+write.table(sample_data(PS107_merged), file = './Data/PS107_metadata.csv',sep = ";", dec = ".", row.names = TRUE)
+
+otus <- as.data.frame(otu_table(PS107_merged))
+otus <- t(as.matrix(otus))
+write.table(otus, file = './Data/PS107_otus_for_ST.csv',sep = ";", dec = ".", row.names = TRUE)
+
+
 
 #####################################
 #get session info and remove all objects and libraries
