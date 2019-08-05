@@ -1,25 +1,6 @@
-######################################################################
-######################################################################
-#This script will reproduce the Rdata files 
-#that are already in the repository!
-#Therefore, no need to run it.
-######################################################################
-######################################################################
-
-#set working directory
-wd <- dirname(rstudioapi::getActiveDocumentContext()$path)
-setwd(wd)
-
-#install required packages
-#.inst_packages <- c("ggplot2", "gridExtra", "phyloseq",
-#                    "igraph","UpSetR","vegan","cowplot",
-#                    "dplyr","ggpmisc","VennDiagram",
-#                    "reshape2","DESeq2","tidyr", "iNEXT", "olsrr")
-
-#.inst <- .inst_packages %in% installed.packages()
-#if(any(!.inst)) {
-#  BiocManager::install(.inst_packages, ask = F)
-#}
+#set working directory in Windows
+# wd <- dirname(rstudioapi::getActiveDocumentContext()$path)
+# setwd(wd)
 
 #load libraries
 library(phyloseq); packageVersion("phyloseq")
@@ -46,6 +27,11 @@ OTU <- otu_table(OTU, taxa_are_rows = TRUE)
 TAX <- tax_table(TAX)
 meta <- sample_data(ENV)
 PS107_merged <- phyloseq(OTU, TAX, meta)
+
+#Remove the unsuccesful sample
+PS107_merged <- subset_samples(PS107_merged, Sample_ID != "7054")
+PS107_merged <- prune_taxa(taxa_sums(PS107_merged)>0, PS107_merged)
+
 
 #####################################
 #Fix categories 
@@ -150,7 +136,6 @@ write.table(sample_data(PS107_merged), file = './Data/PS107_metadata.csv',sep = 
 otus <- as.data.frame(otu_table(PS107_merged))
 otus <- t(as.matrix(otus))
 write.table(otus, file = './Data/PS107_otus_for_ST.csv',sep = ";", dec = ".", row.names = TRUE)
-
 
 
 #####################################
