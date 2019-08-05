@@ -60,108 +60,49 @@ ggsave("./figures/rarefaction.pdf",
        dpi = 300)
 
 #####################################
-#Alpha diversity
+#Alpha diversity statistical tests
 ####################################
-#calculate alpha diversity indeces 100 times
-# Initialize matrices to store richness and evenness estimates
-#rare_size <- 5000
-rare_size <- min(sample_sums(PS107_merged))
-nsamp <-  nsamples(PS107_merged)
-trials <- 100
-
-#Observed number of OTUs
-OTUs <- matrix(nrow = nsamp, ncol = trials)
-row.names(OTUs) <- sample_names(PS107_merged)
-
-richness <- matrix(nrow = nsamp, ncol = trials)
-row.names(richness) <- sample_names(PS107_merged)
-
-evenness <- matrix(nrow = nsamp, ncol = trials)
-row.names(evenness) <- sample_names(PS107_merged)
-
-#Shannon div. index
-Shannon <- matrix(nrow = nsamp, ncol = trials)
-row.names(Shannon) <- sample_names(PS107_merged)
-
-#Simpson div.index
-Simpson <- matrix(nrow = nsamp, ncol = trials)
-row.names(Simpson) <- sample_names(PS107_merged)
-
-#Rarefy the dataset by the smallest sample 100 times
-set.seed(12345)
-
-for (i in 1:100) {
-PS107_merged.rare <- rarefy_even_depth(PS107_merged, sample.size = rare_size,
-                                      rngseed = FALSE, replace = TRUE, trimOTUs = TRUE, verbose = TRUE)
-
 # Calculate richness
-PS107_alpha.div <- estimate_richness(PS107_merged.rare, split = TRUE, measures = NULL)
-
-# OTU num.
-OTUs[ ,i] <- PS107_alpha.div$Observed
-
-#Chao1
-richness[ ,i] <- PS107_alpha.div$Chao1
-
-# Calculate Shannon
-Shannon[ ,i] <- PS107_alpha.div$Shannon
-
-# Calculate Simpson
-Simpson[ ,i] <- PS107_alpha.div$Simpson
-
-# Calculate evenness
-evenness[ ,i] <- PS107_alpha.div$Shannon/log(PS107_alpha.div$Observed)
-}
-
-# Create a new dataframe to hold the means and standard deviations of observed OTUs
-SampleID <- row.names(OTUs)
-mean <- apply(OTUs, 1, mean)
-sd <- apply(OTUs, 1, sd)
-measure <- rep("OTUs", nsamp)
-OTUs_stats <- data.frame(SampleID, mean, sd, measure)
-
-# Create a new dataframe to hold the means and standard deviations of richness estimates
-SampleID <- row.names(richness)
-mean <- apply(richness, 1, mean)
-sd <- apply(richness, 1, sd)
-measure <- rep("Richness", nsamp)
-rich_stats <- data.frame(SampleID, mean, sd, measure)
-
-# Create a new dataframe to hold the means and standard deviations of evenness estimates
-SampleID <- row.names(evenness)
-mean <- apply(evenness, 1, mean)
-sd <- apply(evenness, 1, sd)
-measure <- rep("evenness J", nsamp)
-even_stats <- data.frame(SampleID, mean, sd, measure)
-
-# Create a new dataframe to hold the means and standard deviations of Shannon div. index estimates
-SampleID <- row.names(Shannon)
-mean <- apply(Shannon, 1, mean)
-sd <- apply(Shannon, 1, sd)
-measure <- rep("Shannon", nsamp)
-Shannon_stats <- data.frame(SampleID, mean, sd, measure)
-
-# Create a new dataframe to hold the means and standard deviations of Simpson div. index estimates
-SampleID <- row.names(Simpson)
-mean <- apply(Simpson, 1, mean)
-sd <- apply(Simpson, 1, sd)
-measure <- rep("Simpson", nsamp)
-Simpson_stats <- data.frame(SampleID, mean, sd, measure)
+PS107_alpha.div <- estimate_richness(PS107_merged.prev, split = TRUE, measures = NULL)
 
 #generate data set with all bacterial community characteristics
-PS107_comm.char<- data.frame(Station = sample_data(PS107_merged)$StationName,
-                           Depth = sample_data(PS107_merged)$Depth,
-                           Type = sample_data(PS107_merged)$Type,
-                           Community = sample_data(PS107_merged)$Community,
-                           Sequences= sample_sums(PS107_merged),
-                           Observed = paste(round(OTUs_stats$mean,digits=0),round(OTUs_stats$sd,digits=0),sep="\u00B1"),
-                           Chao1 = paste(round(rich_stats$mean,digits=0),round(rich_stats$sd,digits=0),sep="\u00B1"),
-                           Completness = round(100*OTUs_stats$mean/rich_stats$mean, digits=2),
-                           Shanonn = paste(round(Shannon_stats$mean,digits=2),round(Shannon_stats$sd,digits=2),sep="\u00B1"),
-                           Simpson = paste(round(Simpson_stats$mean,digits=2),round(Simpson_stats$sd,digits=2),sep="\u00B1"),
-                           Evenness = paste(round(even_stats$mean,digits=2),round(even_stats$sd,digits=2),sep="\u00B1"))
-                         
+PS107_comm.char<- data.frame(Station = sample_data(PS107_merged.prev)$StationName,
+                             Group = sample_data(PS107_merged.prev)$Group,
+                             Depth = sample_data(PS107_merged.prev)$Depth,
+                             Type = sample_data(PS107_merged.prev)$Type,
+                             Community = sample_data(PS107_merged.prev)$Community,
+                             Sequences= sample_sums(PS107_merged.prev),
+                             Observed = PS107_alpha.div$Observed,
+                             Chao1 = PS107_alpha.div$Chao1,
+                             Completness = round(100*PS107_alpha.div$Observed/PS107_alpha.div$Chao1, digits=2),
+                             Shanonn = round(PS107_alpha.div$Shannon,digits=2),
+                             Simpson = round(PS107_alpha.div$Simpson,digits=2),
+                             Evenness = round(PS107_alpha.div$Shannon/log(PS107_alpha.div$Observed),digits=2))
+
+
 write.csv(PS107_comm.char, "./Data/alpha_table.csv")
+
+#test siginifance of difference in alpha diversity in upper water column
+PS107_comm.char.up <- PS107_comm.char[PS107_comm.char$Depth < 50, ]
+
+wilcox.test(PS107_comm.char.up$Chao1[PS107_comm.char.up$Group =="in"],
+            PS107_comm.char.up$Chao1[PS107_comm.char.up$Group =="out"])
+
+#test siginifance of difference in alpha diversity below 100 m
+PS107_comm.char.down <- PS107_comm.char[PS107_comm.char$Depth >= 50, ]
+
+wilcox.test(PS107_comm.char.down$Chao1[PS107_comm.char.down$Group =="in"],
+            PS107_comm.char.down$Chao1[PS107_comm.char.down$Group =="out"])
+
+#Chao1 summary
+PS107_comm.Chao1.agg <- do.call(data.frame, aggregate(Chao1~ Group+Type + Community, PS107_comm.char, function(x) c(mean = mean(x), se = se(x),median = median(x))))
+
+#Shanonn summary
+PS107_comm.Shanonn.agg <- do.call(data.frame, aggregate(Shanonn~ Group+Type + Community, PS107_comm.char, function(x) c(mean = mean(x), se = se(x),median = median(x))))
+
+#Shanonn summary
+PS107_comm.Simpson.agg <- do.call(data.frame, aggregate(Simpson~ Group+Type + Community, PS107_comm.char, function(x) c(mean = mean(x), se = se(x),median = median(x))))
+
 
 #####################################
 #ASV distribution
@@ -194,52 +135,6 @@ for (frac in c("FL","PA")){
 df.overview <- cbind(df.FL,df.PA)
 
 
-#####################################
-#Alpha diversity statistical tests
-####################################
-#calculate standard error
-se <- function(x, na.rm=FALSE) {
-  if (na.rm) x <- na.omit(x)
-  sqrt(var(x)/length(x))
-}
-
-#generate the same table without SD
-PS107_comm.char<- data.frame(Station = sample_data(PS107_merged)$StationName,
-                             Group = sample_data(PS107_merged)$Group,
-                             Depth = sample_data(PS107_merged)$Depth,
-                             Type = sample_data(PS107_merged)$Type,
-                             Community = sample_data(PS107_merged)$Community,
-                             Sequences= sample_sums(PS107_merged),
-                             Observed = round(OTUs_stats$mean,digits=0),
-                             Chao1 = round(rich_stats$mean,digits=1),
-                             Completness = OTUs_stats$mean/rich_stats$mean,
-                             Shanonn = round(Shannon_stats$mean,digits=2),
-                             Simpson = round(Simpson_stats$mean,digits=2),
-                             Evenness = round(even_stats$mean,digits=2))
-
-
-
-
-#test siginifance of difference in alpha diversity in upper water column
-PS107_comm.char.up <- PS107_comm.char[PS107_comm.char$Depth < 50, ]
-
-wilcox.test(PS107_comm.char.up$Chao1[PS107_comm.char.up$Group =="in"],
-            PS107_comm.char.up$Chao1[PS107_comm.char.up$Group =="out"])
-
-#test siginifance of difference in alpha diversity below 100 m
-PS107_comm.char.down <- PS107_comm.char[PS107_comm.char$Depth >= 50, ]
-
-wilcox.test(PS107_comm.char.down$Chao1[PS107_comm.char.down$Group =="in"],
-            PS107_comm.char.down$Chao1[PS107_comm.char.down$Group =="out"])
-
-#Chao1 summary
-PS107_comm.Chao1.agg <- do.call(data.frame, aggregate(Chao1~ Group+Type + Community, PS107_comm.char, function(x) c(mean = mean(x), se = se(x),median = median(x))))
-
-#Shanonn summary
-PS107_comm.Shanonn.agg <- do.call(data.frame, aggregate(Shanonn~ Group+Type + Community, PS107_comm.char, function(x) c(mean = mean(x), se = se(x),median = median(x))))
-
-#Shanonn summary
-PS107_comm.Simpson.agg <- do.call(data.frame, aggregate(Simpson~ Group+Type + Community, PS107_comm.char, function(x) c(mean = mean(x), se = se(x),median = median(x))))
 
 #####################################
 #get session info and remove all objects and libraries
