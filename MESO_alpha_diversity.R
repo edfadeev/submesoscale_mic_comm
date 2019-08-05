@@ -1,6 +1,6 @@
-#set working directory
-wd <- dirname(rstudioapi::getActiveDocumentContext()$path)
-setwd(wd)
+#set working directory in Windows
+# wd <- dirname(rstudioapi::getActiveDocumentContext()$path)
+# setwd(wd)
 
 #load libraries
 library("ggplot2"); packageVersion("ggplot2")
@@ -52,12 +52,11 @@ rare.p <- ggplot(rare, aes(x=x, y=y, colour = site))+
   #xlim(0,1e5)+ylim(0,6000)+
   theme_classic(base_size = 12)+theme(legend.position="bottom")
 
-ggsave("./figures/Figure-rarefaction.pdf", 
+ggsave("./figures/rarefaction.pdf", 
        plot = rare.p,
        units = "cm",
-       #width = 17.8,
-       scale = 1,
-       #height = 17.4,
+       width = 30, height = 30, 
+       #scale = 1,
        dpi = 300)
 
 #####################################
@@ -158,99 +157,17 @@ PS107_comm.char<- data.frame(Station = sample_data(PS107_merged)$StationName,
                            Observed = paste(round(OTUs_stats$mean,digits=0),round(OTUs_stats$sd,digits=0),sep="\u00B1"),
                            Chao1 = paste(round(rich_stats$mean,digits=0),round(rich_stats$sd,digits=0),sep="\u00B1"),
                            Completness = round(100*OTUs_stats$mean/rich_stats$mean, digits=2),
-                           Shanonn = paste(round(rich_stats$mean,digits=2),round(rich_stats$sd,digits=2),sep="\u00B1"),
+                           Shanonn = paste(round(Shannon_stats$mean,digits=2),round(Shannon_stats$sd,digits=2),sep="\u00B1"),
                            Simpson = paste(round(Simpson_stats$mean,digits=2),round(Simpson_stats$sd,digits=2),sep="\u00B1"),
                            Evenness = paste(round(even_stats$mean,digits=2),round(even_stats$sd,digits=2),sep="\u00B1"))
                          
 write.csv(PS107_comm.char, "./Data/alpha_table.csv")
 
 #####################################
-#Alpha diversity statistical tests
-####################################
-#generate the same table with no SD
-PS107_comm.char<- data.frame(Station = sample_data(PS107_merged)$StationName,
-                            #Longitude = sample_data(PS107_merged)$Longitude..degrees_east.,
-                            Type = sample_data(PS107_merged)$Type,
-                            Community = sample_data(PS107_merged)$Community,
-                            Sequences= sample_sums(PS107_merged),
-                            Observed = round(OTUs_stats$mean,digits=0),
-                            Chao1 = round(rich_stats$mean,digits=1),
-                            Completness = OTUs_stats$mean/rich_stats$mean,
-                            Shanonn = round(rich_stats$mean,digits=2),
-                            Simpson = round(Simpson_stats$mean,digits=2),
-                            Evenness = round(even_stats$mean,digits=2))
-
-
-
-
-
-
-
-
-
-
-
-
-#Chao1 plot
-PS107_comm.Chao1.agg <- do.call(data.frame, aggregate(Chao1~ Station+Type + Community, PS107_comm.char, function(x) c(mean = mean(x), sd = sd(x),median = median(x))))
-
-#plot
-PS107_Chao1 <-   ggplot(PS107_comm.char, aes(y = Chao1, x = Station))+
-  geom_point(data = PS107_comm.char, aes(y = Chao1, x = Station, group = Community, shape = Community),colour="black",size = 5) +
-  geom_point(data = PS107_comm.char, aes(y = Chao1, x = Station, group = Community, colour = Station, shape = Community),  size =  4) +
-  geom_point(data = PS107_comm.Chao1.agg, aes(y = Chao1.mean, x =Station, group = Community, shape = Community), size = 7) + 
-  geom_line(data = PS107_comm.Chao1.agg, aes(y = Chao1.mean, x = Station, group = Community, linetype= Community), size = 1)+
-  geom_text(data = PS107_comm.char, aes(y = Chao1, x = Station, label = Station))+
-  #scale_x_discrete(limits = c("BATHY","MESO","EPI","SRF"))+
-  #coord_flip()+
-  facet_grid(Type~.)+
-  #scale_color_manual(values = c("EGC" = "blue", "WSC"="red")) +
-  xlab("Depth")+
-  ylab("Chao1 Species Estimator")+
-  theme_classic()+
-  theme(legend.position = "none")
-
-
-#Pielou's evenness (J)
-PS107_comm.evenness.agg <- do.call(data.frame, aggregate(Evenness~ Station+Type +Community, PS107_comm.char, function(x) c(mean = mean(x), sd = sd(x), median = median(x))))
-
-PS107_comm.evenness.agg$Type<- factor(
-  PS107_comm.evenness.agg$Type, 
-  levels = rev(c("SRF", "EPI", "MESO", "BATHY")))
-
-#plot
-PS107_evenness <-   ggplot()+
-  geom_point(data = PS107_comm.char, aes(y = Evenness, x = Station, group = Community, shape = Community),colour="black",size = 5)+
-  geom_point(data = PS107_comm.char, aes(y = Evenness, x = Station, group = Community,  shape = Community), size = 4) +
-  geom_point(data = PS107_comm.evenness.agg, aes(y = Evenness.mean, x = Station, group = Community, shape = Community), size = 4) +  
-  geom_line(data = PS107_comm.evenness.agg, aes(y = Evenness.mean, x = Station, group = Community, linetype= Community), size = 1)+
-  #geom_text(data = PS107_comm.char, aes(y = Evenness, x = Type, label = Station))+
-  #scale_x_discrete(limits = c("BATHY","MESO","EPI","SRF"))+
-  #coord_flip()+
-  facet_grid(Type~.)+
-  #xlab("Depth")+
-  #scale_color_manual(values = c("EGC" = "blue", "WSC"="red")) +
-  ylab("Pielou's evenness index (J)")+
-  theme_bw()+
-  theme(legend.position = "none")
-
-#combined plot
-plot_grid(PS107_Chao1, PS107_evenness, labels = c("A", "B"), ncol = 2, align = "hv")
-
-ggsave("./figures/Figure-alpha.pdf", 
-       plot = ggplot2::last_plot(),
-       scale = 1,
-       units = "cm",
-       width = 17.8,
-       #height = 17.4,
-       dpi = 300)
-
-
-#####################################
-#OTU distribution
+#ASV distribution
 #####################################
 for (frac in c("FL","PA")){
-  #mean number of OTU per sample
+  #mean number of ASV per sample
   PS107_merged_sub <- subset_samples(PS107_merged, Community== frac)
   PS107_merged_sub <- prune_taxa(taxa_sums(PS107_merged_sub)>0, PS107_merged_sub)
   
@@ -267,14 +184,62 @@ for (frac in c("FL","PA")){
   PS107_archaea <- prune_taxa(taxa_sums(PS107_archaea)>0,PS107_archaea)
   
   assign(paste("df", frac, sep = "."), t(data.frame(total.reads= sum(sample_sums(PS107_merged_sub)),
-                                                    total.OTU= dim(otu_table(PS107_merged_sub))[1],
-                                                    total.BAC.OTU=dim(otu_table(PS107_bacteria))[1],
-                                                    total.ARC.OTU=dim(otu_table(PS107_archaea))[1],
-                                                    mean.OTU.per.sample=mean(vectorx),
-                                                    sd.OTU.per.sample=sd(vectorx)/sqrt(length(vectorx)))))
+                                                    total.ASV= dim(otu_table(PS107_merged_sub))[1],
+                                                    total.BAC.ASV=dim(otu_table(PS107_bacteria))[1],
+                                                    total.ARC.ASV=dim(otu_table(PS107_archaea))[1],
+                                                    mean.ASV.per.sample=mean(vectorx),
+                                                    sd.ASV.per.sample=se(vectorx))))
 }
 
 df.overview <- cbind(df.FL,df.PA)
+
+
+#####################################
+#Alpha diversity statistical tests
+####################################
+#calculate standard error
+se <- function(x, na.rm=FALSE) {
+  if (na.rm) x <- na.omit(x)
+  sqrt(var(x)/length(x))
+}
+
+#generate the same table without SD
+PS107_comm.char<- data.frame(Station = sample_data(PS107_merged)$StationName,
+                             Group = sample_data(PS107_merged)$Group,
+                             Depth = sample_data(PS107_merged)$Depth,
+                             Type = sample_data(PS107_merged)$Type,
+                             Community = sample_data(PS107_merged)$Community,
+                             Sequences= sample_sums(PS107_merged),
+                             Observed = round(OTUs_stats$mean,digits=0),
+                             Chao1 = round(rich_stats$mean,digits=1),
+                             Completness = OTUs_stats$mean/rich_stats$mean,
+                             Shanonn = round(Shannon_stats$mean,digits=2),
+                             Simpson = round(Simpson_stats$mean,digits=2),
+                             Evenness = round(even_stats$mean,digits=2))
+
+
+
+
+#test siginifance of difference in alpha diversity in upper water column
+PS107_comm.char.up <- PS107_comm.char[PS107_comm.char$Depth < 100, ]
+
+wilcox.test(PS107_comm.char.up$Chao1[PS107_comm.char.up$Group =="in"],
+            PS107_comm.char.up$Chao1[PS107_comm.char.up$Group =="out"])
+
+#test siginifance of difference in alpha diversity below 100 m
+PS107_comm.char.down <- PS107_comm.char[PS107_comm.char$Depth >= 100, ]
+
+wilcox.test(PS107_comm.char.down$Chao1[PS107_comm.char.down$Group =="in"],
+            PS107_comm.char.down$Chao1[PS107_comm.char.down$Group =="out"])
+
+#Chao1 summary
+PS107_comm.Chao1.agg <- do.call(data.frame, aggregate(Chao1~ Group+Type + Community, PS107_comm.char, function(x) c(mean = mean(x), se = se(x),median = median(x))))
+
+#Shanonn summary
+PS107_comm.Shanonn.agg <- do.call(data.frame, aggregate(Shanonn~ Group+Type + Community, PS107_comm.char, function(x) c(mean = mean(x), se = se(x),median = median(x))))
+
+#Shanonn summary
+PS107_comm.Simpson.agg <- do.call(data.frame, aggregate(Simpson~ Group+Type + Community, PS107_comm.char, function(x) c(mean = mean(x), se = se(x),median = median(x))))
 
 #####################################
 #get session info and remove all objects and libraries
