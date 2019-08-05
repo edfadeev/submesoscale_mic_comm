@@ -20,15 +20,15 @@ source('./Scripts/color_palettes.R')
 #####################################
 #Load phyloseq object
 ####################################
-PS107_merged <-  readRDS("./Data/PS107_merged.rds")
+PS107_merged <-  readRDS("./Data/PS107_merged_prev.rds")
 
 #####################################
 #Plot rarefaction
 ####################################
-iNEXT.out <- iNEXT(as.data.frame(otu_table(PS107_merged)), q=0, datatype="abundance")
+iNEXT.out <- iNEXT(as.data.frame(otu_table(PS107_merged.prev)), q=0, datatype="abundance")
 rare <-fortify(iNEXT.out, type=1)
 
-meta <- as(sample_data(PS107_merged), "data.frame")
+meta <- as(sample_data(PS107_merged.prev), "data.frame")
 meta$site <- rownames(meta)
 rare$Community <- meta$Community[match(rare$site, meta$site)] 
 rare$StationName <- meta$StationName[match(rare$site, meta$site)] 
@@ -52,7 +52,7 @@ rare.p <- ggplot(rare, aes(x=x, y=y, colour = site))+
   #xlim(0,1e5)+ylim(0,6000)+
   theme_classic(base_size = 12)+theme(legend.position="bottom")
 
-ggsave("./figures/rarefaction.pdf", 
+ggsave("./figures/rarefaction-prev.pdf", 
        plot = rare.p,
        units = "cm",
        width = 30, height = 30, 
@@ -80,7 +80,7 @@ PS107_comm.char<- data.frame(Station = sample_data(PS107_merged.prev)$StationNam
                              Evenness = round(PS107_alpha.div$Shannon/log(PS107_alpha.div$Observed),digits=2))
 
 
-write.csv(PS107_comm.char, "./Data/alpha_table.csv")
+write.csv(PS107_comm.char, "./Data/alpha_table_prev.csv")
 
 #test siginifance of difference in alpha diversity in upper water column
 PS107_comm.char.up <- PS107_comm.char[PS107_comm.char$Depth < 50, ]
