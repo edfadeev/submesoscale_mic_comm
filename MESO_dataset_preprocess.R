@@ -70,21 +70,22 @@ prevdf <-  apply(X = otu_table(PS107_merged),
                  FUN = function(x){sum(x > 0)})
 
 # # Add taxonomy and total read counts to this data.frame
-# prevdf.tax  <-  data.frame(Prevalence = prevdf,
-#                       TotalAbundance = taxa_sums(PS107_merged),
-#                        tax_table(PS107_merged))
-# #summarize
-# prevdf.tax.summary <- plyr::ddply(prevdf.tax, "Phylum", function(df1){cbind(mean(df1$Prevalence),sum(df1$Prevalence))})
+prevdf.tax  <-  data.frame(Prevalence = prevdf,
+                           TotalAbundance = taxa_sums(PS107_merged),
+                           tax_table(PS107_merged))
+#summarize
+prevdf.tax.summary <- plyr::ddply(prevdf.tax, "Phylum", function(df1){cbind(mean(df1$Prevalence),sum(df1$Prevalence))})
+
 # 
 # #plot
-# prev_plot_phyl <- ggplot(prevdf.tax, aes(TotalAbundance, Prevalence / nsamples(PS107_merged),color=Phylum)) +
-# # Include a guess for parameter
-#   geom_hline(yintercept = 0.05, alpha = 0.5, linetype = 2) + geom_point(size = 2, alpha = 0.7) +
-#   scale_x_log10() +  xlab("Total Abundance") + ylab("Prevalence [Frac. Samples]") +
-#   facet_wrap(~Phylum) + theme(legend.position="none")
+prev_plot_phyl <- ggplot(prevdf.tax, aes(TotalAbundance, Prevalence / nsamples(PS107_merged),color=Phylum)) +
+  # # Include a guess for parameter
+  geom_hline(yintercept = 0.15, alpha = 0.5, linetype = 2) + geom_point(size = 2, alpha = 0.7) +
+  scale_x_log10() +  xlab("Total Abundance") + ylab("Prevalence [Frac. Samples]") +
+  facet_wrap(~Phylum) + theme(legend.position="none")
 
 #  Define prevalence threshold as 5% of total samples
-prevalenceThreshold <- round(0.05 * nsamples(PS107_merged))
+prevalenceThreshold <- round(0.15 * nsamples(PS107_merged))
 prevalenceThreshold
 
 # Execute prevalence filter, using `prune_taxa()` function
