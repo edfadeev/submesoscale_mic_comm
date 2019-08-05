@@ -1,6 +1,6 @@
-#set working directory
-wd <- dirname(rstudioapi::getActiveDocumentContext()$path)
-setwd(wd)
+#set working directory in Windows
+# wd <- dirname(rstudioapi::getActiveDocumentContext()$path)
+# setwd(wd)
 
 #load libraries
 library(ggplot2); packageVersion("ggplot2")
@@ -19,47 +19,73 @@ source('./scripts/plot_distances.R')
 source('./scripts/color_palettes.R')
 
 #Load datatset
-PS107_merged.prev <- readRDS("./Data/PS107_merged_prev.rds")
-PS107_merged.prev.vst <- readRDS("./Data/PS107_merged_prev_vst.rds")
+PS107_merged <- readRDS("./Data/PS107_merged.rds")
+PS107_merged.vst <- readRDS("./Data/PS107_merged_vst.rds")
 
 #####################################
 #Plot barplots of communities
 #####################################
-PS107_merged.prev.CTD <- subset_samples(PS107_merged.prev, Gear == "CTD")
-PS107_merged.prev.CTD <- prune_taxa(taxa_sums(PS107_merged.prev.CTD)>0,PS107_merged.prev.CTD)
-
 #transform data
-BAC_pruned.ra <- transform_sample_counts(PS107_merged.prev.CTD, function(x) x / sum(x))
+BAC_pruned.ra <- transform_sample_counts(PS107_merged, function(x) x / sum(x))
 BAC_pruned.ra.long <- psmelt(BAC_pruned.ra)
+BAC_pruned.ra.long$Abundance <- BAC_pruned.ra.long$Abundance*100
 
-#calculate abundance for each taxa
-BAC_pruned.ra.long.agg <- aggregate(Abundance~StationName+Community+Depth+Class, BAC_pruned.ra.long, FUN = "sum")
-BAC_pruned.ra.long.agg$Abundance <- BAC_pruned.ra.long.agg$Abundance*100
+#fix unclassified lineages 
+BAC_pruned.ra.long$Class <- as.character(BAC_pruned.ra.long$Class)
+BAC_pruned.ra.long$Class[is.na(BAC_pruned.ra.long$Class)] <- paste(BAC_pruned.ra.long$Phylum[is.na(BAC_pruned.ra.long$Class)],"uc", sep = "_")
+
+#calculate abundance for each Class
+BAC_pruned.ra.long %>% select(StationName,Community,Type,Class,Abundance)%>%
+                        group_by(StationName,Community,Type,Class) %>%
+                        summarize(Abund.total= sum(Abundance)) -> BAC_pruned.ra.long.agg
 
 #order of stations
-BAC_pruned.ra.long.agg$StationName <- factor(BAC_pruned.ra.long.agg$StationName, levels = c("T4","T1","T2","T3","T5"))
-BAC_pruned.ra.long.agg$Depth <- as.numeric(as.character(BAC_pruned.ra.long.agg$Depth))
-#correct taxonomy
-BAC_pruned.ra.long.agg$Class <- gsub("_unclassified","_uc",BAC_pruned.ra.long.agg$Class)
+BAC_pruned.ra.long.agg$StationName <- factor(BAC_pruned.ra.long.agg$StationName, 
+                                             levels = c("T4","T1","T2","T5","T3"))
+BAC_pruned.ra.long.agg$Type <- factor(BAC_pruned.ra.long.agg$Type,
+                                      levels = c("Surface-10","Chl.max-20-30","B.Chl.max-50","Epipelagic-100","Mesopelagic-200","Mesopelagic-400"))
 
-#remove below 2% ra
+#remove below 1% ra
 taxa_classes <- unique(BAC_pruned.ra.long.agg$Class)
-BAC_pruned.ra.long.agg$Class[BAC_pruned.ra.long.agg$Abundance<2] <- "Other taxa"
+BAC_pruned.ra.long.agg$Class[BAC_pruned.ra.long.agg$Abund.total<1] <- "Other taxa"
 BAC_pruned.ra.long.agg$Class <- factor(BAC_pruned.ra.long.agg$Class,
                                        levels=c(taxa_classes,"Other taxa"))
 
 #Plot 
-barplots <- ggplot(BAC_pruned.ra.long.agg, aes(x = StationName, y = Abundance, fill = Class)) + 
-  facet_grid(Depth~Community, space= "fixed") +
+barplots <- ggplot(BAC_pruned.ra.long.agg, aes(x = StationName, y = Abund.total, fill = Class)) + 
+  facet_grid(Type~Community, space= "fixed") +
   geom_col()+
-  scale_fill_manual(values = tol21rainbow) + 
+  scale_fill_manual(values = sample(tol21rainbow)) + 
   guides(fill = guide_legend(reverse = FALSE, keywidth = 1, keyheight = 1)) +
   ylab("Sequence proportions (%) \n")+
   theme(legend.position="bottom")
 
-ggsave("./figures/barplot.pdf", barplots, dpi = 300, 
+ggsave("./figures/barplot-raw.pdf", barplots, dpi = 300, 
        width = 30, height = 30, 
        units = "cm")
+
+
+#overview of different groups by layers
+BAC_pruned.ra.long %>% select(Group, layers, StationName, Type, Community,Class, Abundance)%>%
+  group_by(Group, StationName, Type, Community,layers, Class) %>%
+  summarize(class.abund= sum(Abundance)) -> tax_overview_by_stations
+
+
+tax_overview_by_stations %>% group_by(Group, layers, Community, Class) %>%
+        summarize(mean.abund= mean(class.abund),
+                  se.abund = se(class.abund)) -> tax_overview_by_groups_layers
+
+
+
+
+
+
+
+
+
+
+
+
 
 #####################################
 #PCoA plot

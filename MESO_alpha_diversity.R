@@ -221,13 +221,13 @@ PS107_comm.char<- data.frame(Station = sample_data(PS107_merged)$StationName,
 
 
 #test siginifance of difference in alpha diversity in upper water column
-PS107_comm.char.up <- PS107_comm.char[PS107_comm.char$Depth < 100, ]
+PS107_comm.char.up <- PS107_comm.char[PS107_comm.char$Depth < 50, ]
 
 wilcox.test(PS107_comm.char.up$Chao1[PS107_comm.char.up$Group =="in"],
             PS107_comm.char.up$Chao1[PS107_comm.char.up$Group =="out"])
 
 #test siginifance of difference in alpha diversity below 100 m
-PS107_comm.char.down <- PS107_comm.char[PS107_comm.char$Depth >= 100, ]
+PS107_comm.char.down <- PS107_comm.char[PS107_comm.char$Depth >= 50, ]
 
 wilcox.test(PS107_comm.char.down$Chao1[PS107_comm.char.down$Group =="in"],
             PS107_comm.char.down$Chao1[PS107_comm.char.down$Group =="out"])

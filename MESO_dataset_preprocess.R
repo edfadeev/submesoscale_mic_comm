@@ -47,6 +47,10 @@ sample_data(PS107_merged)$StationName<- factor(
 sample_data(PS107_merged)$Type <- factor(sample_data(PS107_merged)$Type, 
                                       levels = c("Surface-10","Chl.max-20-30","B.Chl.max-50","Epipelagic-100","Mesopelagic-200","Mesopelagic-400"))
 
+#separation of surface and deep
+sample_data(PS107_merged)$layers <- "down"
+sample_data(PS107_merged)$layers[sample_data(PS107_merged)$Depth < 50] <- "up"
+
 #####################################
 #Plot total number of reads and OTUs per sample
 #####################################
