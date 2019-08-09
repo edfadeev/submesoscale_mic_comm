@@ -49,7 +49,7 @@ sample_data(PS107_merged)$Type <- factor(sample_data(PS107_merged)$Type,
 
 #separation of surface and deep
 sample_data(PS107_merged)$layers <- "down"
-sample_data(PS107_merged)$layers[sample_data(PS107_merged)$Depth < 50] <- "up"
+sample_data(PS107_merged)$layers[sample_data(PS107_merged)$Depth < 100] <- "up"
 
 #####################################
 #Plot total number of reads and OTUs per sample
@@ -136,12 +136,11 @@ saveRDS(PS107_merged.prev, "./Data/PS107_merged_prev.rds")
 #####################################
 #raw table
 #export tables for Aphros
-write.table(sample_data(PS107_merged), file = './Data/PS107_metadata.csv',sep = ";", dec = ".", row.names = TRUE)
+write.table(sample_data(PS107_merged.prev), file = './Data/PS107_metadata_prev.csv',sep = ";", dec = ".", row.names = TRUE)
 
-otus <- as.data.frame(otu_table(PS107_merged))
+otus <- as.data.frame(otu_table(PS107_merged.prev))
 otus <- t(as.matrix(otus))
-write.table(otus, file = './Data/PS107_otus_for_ST.csv',sep = ";", dec = ".", row.names = TRUE)
-
+write.table(otus, file = './Data/PS107_otus_for_ST_prev.csv',sep = ";", dec = ".", row.names = TRUE)
 
 #####################################
 #get session info and remove all objects and libraries
