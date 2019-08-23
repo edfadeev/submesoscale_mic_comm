@@ -18,6 +18,15 @@ theme_set(theme_classic())
 source('./scripts/plot_distances.R')
 source('./scripts/color_palettes.R')
 
+###################################
+## defined functions
+###################################
+#calculate standard error
+se <- function(x, na.rm=FALSE) {
+  if (na.rm) x <- na.omit(x)
+  sqrt(var(x)/length(x))
+}
+
 #Load datatset
 PS107_merged <- readRDS("./Data/PS107_merged.rds")
 PS107_merged.prev <- readRDS("./Data/PS107_merged_prev.rds")
@@ -34,6 +43,12 @@ BAC_pruned.ra.long$Abundance <- BAC_pruned.ra.long$Abundance*100
 #fix unclassified lineages 
 BAC_pruned.ra.long$Class <- as.character(BAC_pruned.ra.long$Class)
 BAC_pruned.ra.long$Class[is.na(BAC_pruned.ra.long$Class)] <- paste(BAC_pruned.ra.long$Phylum[is.na(BAC_pruned.ra.long$Class)],"uc", sep = "_")
+
+BAC_pruned.ra.long$Order <- as.character(BAC_pruned.ra.long$Order)
+BAC_pruned.ra.long$Order[is.na(BAC_pruned.ra.long$Order)] <- paste(BAC_pruned.ra.long$Class[is.na(BAC_pruned.ra.long$Order)],"uc", sep = "_")
+
+BAC_pruned.ra.long$Family <- as.character(BAC_pruned.ra.long$Family)
+BAC_pruned.ra.long$Family[is.na(BAC_pruned.ra.long$Family)] <- paste(BAC_pruned.ra.long$Order[is.na(BAC_pruned.ra.long$Family)],"uc", sep = "_")
 
 #calculate abundance for each Class
 BAC_pruned.ra.long %>% select(StationName,Community,Type,Class,Abundance)%>%
@@ -66,7 +81,7 @@ ggsave("./figures/barplot-prev.pdf", barplots, dpi = 300,
        units = "cm")
 
 #overview of different groups by layers
-BAC_pruned.ra.long %>% select(Group, layers, StationName, Type, Community,Class, Abundance)%>%
+BAC_pruned.ra.long %>% select(Group, layers, StationName, Type, Community, Class, Abundance)%>%
   group_by(Group, StationName, Type, Community,layers, Class) %>%
   summarize(class.abund= sum(Abundance)) -> tax_overview_by_stations
 
@@ -75,21 +90,29 @@ tax_overview_by_stations %>% group_by(Group, layers, Community, Class) %>%
         summarize(mean.abund= mean(class.abund),
                   se.abund = se(class.abund)) -> tax_overview_by_groups_layers
 
+#overview of different famalies by layers
+BAC_pruned.ra.long %>% select(Group, layers, StationName, Type, Community, Class, Order, Family, Abundance)%>%
+  group_by(Group, StationName, Type, Community,layers, Class, Order,Family) %>%
+  summarize(class.abund= sum(Abundance)) -> family_overview_by_stations
+
+
+family_overview_by_stations %>% group_by(Group, layers, Community, Class, Order, Family) %>%
+  summarize(mean.abund= mean(class.abund),
+            se.abund = se(class.abund)) -> family_overview_by_groups_layers
+
 
 #####################################
 #PCA plot
 #####################################
-PS107.ord <- ordinate(PS107_merged.prev.vst, method = "RDA")
+PS107_merged.prev.vst <- readRDS("./Data/PS107_merged_prev_vst.rds")
+PS107.ord <- ordinate(PS107_merged.prev.vst, method = "RDA", distance = "eucledian")
 PS107.ord.df <- plot_ordination(PS107_merged.prev.vst, PS107.ord, axes = c(1,2,3),justDF = TRUE)
-
-#adjust grouping for clustering
-PS107.ord.df$new_ordination <- paste(PS107.ord.df$StationName, PS107.ord.df$Depth,PS107.ord.df$Community, sep= ".")
 
 #extract explained variance
 PS107.ord.evals <- 100 * (PS107.ord$CA$eig/ sum(PS107.ord$CA$eig))
 PS107.ord.df$ID <- rownames(PS107.ord.df)
 
-PS107.ord.p <- ggplot(data = PS107.ord.df, aes(x =PC1, y=PC2, shape = Type, colour = Community))+
+PS107.ord.p <- ggplot(data = PS107.ord.df, aes(x =PC1, y=PC2, shape = Community, colour = Type))+
   geom_point(colour="black",size = 4)+
   geom_point(size = 3)+
   #geom_polygon(data=PS107.ord.df,aes(x=NMDS1,y=NMDS2,fill=Type,group=Type),alpha=0.30) +
@@ -103,6 +126,22 @@ PS107.ord.p <- ggplot(data = PS107.ord.df, aes(x =PC1, y=PC2, shape = Type, colo
 ggsave("./figures/PCA_prev.pdf", PS107.ord.p, dpi = 300, 
        #width = 11.4, height = 23, 
        units = "cm")
+
+
+#significance test
+df <- as(sample_data(PS107_merged.prev.vst), "data.frame")
+d <- phyloseq::distance(PS107_merged.prev.vst, "euclidean")
+adonis_all <- adonis(d ~ Community + Group + Type, df)
+adonis_all
+
+
+#significance test on only surface samples
+PS107_SRF <- subset_samples(PS107_merged.prev.vst, Type %in% c("Surface-10","Chl.max-20-30","B.Chl.max-50"))
+
+df <- as(sample_data(PS107_SRF), "data.frame")
+d <- phyloseq::distance(PS107_SRF, "euclidean")
+adonis_all <- adonis(d ~ Community + Group + Type, df)
+adonis_all
 
 
 #####################################
