@@ -71,7 +71,7 @@ PS107_comm.char<- data.frame(Station = sample_data(PS107_merged.prev)$StationNam
                              Depth = sample_data(PS107_merged.prev)$Depth,
                              Type = sample_data(PS107_merged.prev)$Type,
                              Community = sample_data(PS107_merged.prev)$Community,
-                             Sequences= sample_sums(PS107_merged.prev),
+                             Sequences= sample_sums(PS107_merged),
                              Observed = PS107_alpha.div$Observed,
                              Chao1 = PS107_alpha.div$Chao1,
                              Completness = round(100*PS107_alpha.div$Observed/PS107_alpha.div$Chao1, digits=2),
@@ -83,13 +83,23 @@ PS107_comm.char<- data.frame(Station = sample_data(PS107_merged.prev)$StationNam
 write.csv(PS107_comm.char, "./Data/alpha_table_prev.csv")
 
 #test siginifance of difference in alpha diversity in upper water column
-PS107_comm.char.up <- PS107_comm.char[PS107_comm.char$Depth < 50, ]
+PS107_comm.char.up <- PS107_comm.char[PS107_comm.char$Depth < 100, ]
 
 wilcox.test(PS107_comm.char.up$Chao1[PS107_comm.char.up$Group =="in"],
             PS107_comm.char.up$Chao1[PS107_comm.char.up$Group =="out"])
 
+
+Chao1_upper_50M.plot <- ggplot(PS107_comm.char.up, aes (x = Group, y = Chao1, fill = Group))+
+  geom_boxplot(outlier.color = NULL, notch = FALSE)+
+  scale_fill_manual(values = c("in"= "red","out" = "blue"))+
+  geom_boxplot()+
+  facet_grid(~Community)+
+  theme_classic(base_size = 12)+
+  theme(legend.position = "bottom")
+
+
 #test siginifance of difference in alpha diversity below 100 m
-PS107_comm.char.down <- PS107_comm.char[PS107_comm.char$Depth >= 50, ]
+PS107_comm.char.down <- PS107_comm.char[PS107_comm.char$Depth >= 100, ]
 
 wilcox.test(PS107_comm.char.down$Chao1[PS107_comm.char.down$Group =="in"],
             PS107_comm.char.down$Chao1[PS107_comm.char.down$Group =="out"])
@@ -97,10 +107,11 @@ wilcox.test(PS107_comm.char.down$Chao1[PS107_comm.char.down$Group =="in"],
 #Chao1 summary
 PS107_comm.Chao1.agg <- do.call(data.frame, aggregate(Chao1~ Group+Type + Community, PS107_comm.char, function(x) c(mean = mean(x), se = se(x),median = median(x))))
 
+  
 #Shanonn summary
 PS107_comm.Shanonn.agg <- do.call(data.frame, aggregate(Shanonn~ Group+Type + Community, PS107_comm.char, function(x) c(mean = mean(x), se = se(x),median = median(x))))
 
-#Shanonn summary
+#Simpson summary
 PS107_comm.Simpson.agg <- do.call(data.frame, aggregate(Simpson~ Group+Type + Community, PS107_comm.char, function(x) c(mean = mean(x), se = se(x),median = median(x))))
 
 
@@ -109,7 +120,7 @@ PS107_comm.Simpson.agg <- do.call(data.frame, aggregate(Simpson~ Group+Type + Co
 #####################################
 for (frac in c("FL","PA")){
   #mean number of ASV per sample
-  PS107_merged_sub <- subset_samples(PS107_merged, Community== frac)
+  PS107_merged_sub <- subset_samples(PS107_merged.prev, Community== frac)
   PS107_merged_sub <- prune_taxa(taxa_sums(PS107_merged_sub)>0, PS107_merged_sub)
   
   vectorx <- vector()
