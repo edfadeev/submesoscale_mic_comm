@@ -105,6 +105,7 @@ family_overview_by_stations %>% group_by(Group, layers, Community, Class, Order,
 #PCA plot
 #####################################
 PS107_merged.prev.vst <- readRDS("./Data/PS107_merged_prev_vst.rds")
+
 PS107.ord <- ordinate(PS107_merged.prev.vst, method = "RDA", distance = "eucledian")
 PS107.ord.df <- plot_ordination(PS107_merged.prev.vst, PS107.ord, axes = c(1,2,3),justDF = TRUE)
 
@@ -115,11 +116,16 @@ PS107.ord.df$ID <- rownames(PS107.ord.df)
 PS107.ord.p <- ggplot(data = PS107.ord.df, aes(x =PC1, y=PC2, shape = Community, colour = Type))+
   geom_point(colour="black",size = 4)+
   geom_point(size = 3)+
-  #geom_polygon(data=PS107.ord.df,aes(x=NMDS1,y=NMDS2,fill=Type,group=Type),alpha=0.30) +
+  stat_ellipse(data = PS107.ord.df, aes(x =PC1, y=PC2, group = Community), size = 1, type= "norm")+
   geom_text(aes(label = StationName), colour = "black", nudge_y= -0.5,  size=4)+
   labs(x = sprintf("PC1 [%s%%]", round(PS107.ord.evals[1], 2)), 
        y = sprintf("PC2 [%s%%]", round(PS107.ord.evals[2], 2)), shape = "Depth", color = "Community")+
-  #annotate(geom="text", size = 5, x=-1.2, y=0.7, label= paste("Stress =", round(PS107.ord$stress, 3), sep = " "),color="black")+
+  scale_color_manual(values = c("Surface-10" = "lightblue", 
+                                "Chl.max-20-30"="green",
+                                "B.Chl.max-50"="darkgreen",
+                                "Epipelagic-100"="blue",
+                                "Mesopelagic-200"="darkblue",
+                                "Mesopelagic-400"="darkblue")) +
   theme_classic(base_size = 12)+
   theme(legend.position = "bottom")
 
@@ -136,13 +142,21 @@ adonis_all
 
 
 #significance test on only surface samples
-PS107_SRF <- subset_samples(PS107_merged.prev.vst, Type %in% c("Surface-10","Chl.max-20-30","B.Chl.max-50"))
+PS107_SRF <- subset_samples(PS107_merged.prev.vst, Type %in% c("Surface-10","Chl.max-20-30","B.Chl.max-50","Epipelagic-100"))
 
 df <- as(sample_data(PS107_SRF), "data.frame")
 d <- phyloseq::distance(PS107_SRF, "euclidean")
 adonis_all <- adonis(d ~ Community + Group + Type, df)
 adonis_all
 
+
+#significance test below 50 m
+PS107_deep <- subset_samples(PS107_merged.prev.vst, Type %in% c("Epipelagic-100","Mesopelagic-200","Mesopelagic-400"))
+
+df <- as(sample_data(PS107_deep), "data.frame")
+d <- phyloseq::distance(PS107_deep, "euclidean")
+adonis_all <- adonis(d ~ Community + Group + Type, df)
+adonis_all
 
 #####################################
 #get session info and remove all objects and libraries
