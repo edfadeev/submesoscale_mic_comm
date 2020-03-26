@@ -134,6 +134,39 @@ ggsave("./figures/PCA_prev.pdf", PS107.ord.p, dpi = 300,
        units = "cm")
 
 
+#####################################
+#PCA plot of upper 50 m
+#####################################
+PS107_upper50m <- subset_samples(PS107_merged.prev.vst, Type %in% c("Surface-10", 
+                                                                    "Chl.max-20-30",
+                                                                    "B.Chl.max-50"))
+
+PS107_upper50m.ord <- ordinate(PS107_upper50m, method = "RDA", distance = "eucledian")
+PS107_upper50m.ord.df <- plot_ordination(PS107_upper50m, PS107_upper50m.ord, axes = c(1,2,3),justDF = TRUE)
+
+#extract explained variance
+PS107_upper50m.ord.evals <- 100 * (PS107_upper50m.ord$CA$eig/ sum(PS107_upper50m.ord$CA$eig))
+PS107_upper50m.ord.df$ID <- rownames(PS107_upper50m.ord.df)
+
+PS107_upper50m.ord.p <- ggplot(data = PS107_upper50m.ord.df, aes(x =PC1, y=PC2, shape = Community, color = Type))+
+  geom_point(colour="black",size = 4)+
+  geom_point(size = 3)+
+  #stat_ellipse(data = PS107.ord.df, aes(x =PC1, y=PC2, group = Type), size = 1, type= "t")+
+  geom_text(aes(label = StationName, colour = Group), nudge_y= -0.5,  size=4)+
+  labs(x = sprintf("PC1 [%s%%]", round(PS107.ord.evals[1], 2)), 
+       y = sprintf("PC2 [%s%%]", round(PS107.ord.evals[2], 2)), shape = "Depth", color = "Community")+
+  scale_color_manual(values = c("Surface-10" = "lightblue", 
+                                "Chl.max-20-30"="green",
+                                "B.Chl.max-50"="darkgreen",
+                                "in"= "red",
+                                "out" = "black")) +
+  theme_classic(base_size = 12)+
+  theme(legend.position = "bottom")
+
+
+
+
+
 #significance test
 df <- as(sample_data(PS107_merged.prev.vst), "data.frame")
 d <- phyloseq::distance(PS107_merged.prev.vst, "euclidean")
