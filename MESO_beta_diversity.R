@@ -114,11 +114,11 @@ PS107.ord.df <- plot_ordination(PS107_merged.prev.vst, PS107.ord, axes = c(1,2,3
 PS107.ord.evals <- 100 * (PS107.ord$CA$eig/ sum(PS107.ord$CA$eig))
 PS107.ord.df$ID <- rownames(PS107.ord.df)
 
-PS107.ord.p <- ggplot(data = PS107.ord.df, aes(x =PC1, y=PC2, shape = Community, colour = Type))+
-  geom_point(colour="black",size = 4)+
-  geom_point(size = 3)+
-  stat_ellipse(data = PS107.ord.df, aes(x =PC1, y=PC2, group = Community), size = 1, type= "norm")+
-  geom_text(aes(label = StationName), colour = "black", nudge_y= -0.5,  size=4)+
+PS107.ord.p <- ggplot(data = PS107.ord.df, aes(x =PC1, y=PC2, shape = Community))+
+  geom_point(colour="black",size = 5)+
+  geom_point(size = 4)+
+  #stat_ellipse(data = PS107.ord.df, aes(x =PC1, y=PC2, group = Community), size = 1, type= "norm")+
+  #geom_text(aes(label = StationName), colour = "black", nudge_y= -0.5,  size=4)+
   labs(x = sprintf("PC1 [%s%%]", round(PS107.ord.evals[1], 2)), 
        y = sprintf("PC2 [%s%%]", round(PS107.ord.evals[2], 2)), shape = "Depth", color = "Community")+
   scale_color_manual(values = c("Surface-10" = "lightblue", 
@@ -127,6 +127,10 @@ PS107.ord.p <- ggplot(data = PS107.ord.df, aes(x =PC1, y=PC2, shape = Community,
                                 "Epipelagic-100"="blue",
                                 "Mesopelagic-200"="darkblue",
                                 "Mesopelagic-400"="darkblue")) +
+  geom_label_repel(aes(label = paste(StationName,paste(Depth,"m", sep = "")),
+                       fill = Group), color = 'white',
+                   size = 3, seed = 1)+
+  scale_fill_manual(values = c("in"= "red","out" = "blue"))+
   theme_classic(base_size = 12)+
   theme(legend.position = "bottom")
 
