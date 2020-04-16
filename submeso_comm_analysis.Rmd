@@ -1,0 +1,500 @@
+---
+title: "Untitled"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+#load libraries
+library(phyloseq); packageVersion("phyloseq")
+library(vegan); packageVersion("vegan")
+library(tidyr); packageVersion("tidyr")
+library(DESeq2); packageVersion("DESeq2")
+library(ggplot2); packageVersion("ggplot2")
+library(iNEXT); packageVersion("iNEXT")
+library(ggthemes); packageVersion("ggthemes")
+library(knitr); packageVersion("knitr")
+library(dplyr); packageVersion("dplyr")
+library(venn); packageVersion("venn")
+library(ggrepel); packageVersion("ggrepel")
+set.seed(1234)
+
+source("scripts/pres_abs_matrix.R")
+source("scripts/color_palettes.R")
+# set a theme
+theme_set(theme_bw(base_size = 18, base_family = "sans"))
+
+```
+
+
+```{r import to phyloseq}
+OTU<- read.csv("./data/seqtab.txt", h=T, sep="\t")
+#correct sample names in OTU table
+names(OTU)<- gsub("_F_filt.fastq.gz","",names(OTU))
+
+sample_df <- read.csv("./data/MESO_samples_meta.csv", header = TRUE, row.names = 1)
+sample_df <- sample_df[names(OTU),]
+
+#import taxonomy and add unclassified levels
+TAX<- as.matrix(read.csv("./data/taxonomy_table.txt", h=T,sep = "\t"))
+
+ k <- ncol(TAX) - 1
+  for (i in 2:k) {
+    if (sum(is.na(TAX[, i])) > 1) {
+      test <- TAX[is.na(TAX[, i]), ]
+      for (j in 1:nrow(test)) {
+        if (sum(is.na(test[j, i:(k + 1)])) == length(test[j, i:(k + 1)])) {
+          test[j, i] <- paste(test[j, (i - 1)], "_uncl", sep = "")
+          test[j, (i + 1):(k + 1)] <- test[j, i]
+        }
+      }
+      TAX[is.na(TAX[, i]), ] <- test
+    }
+    if (sum(is.na(TAX[, i])) == 1) {
+      test <- TAX[is.na(TAX[, i]), ]
+      if (sum(is.na(test[i:(k + 1)])) == length(test[i:(k + 1)])) {
+        test[i] <- paste(test[(i - 1)], "_uncl", sep = "")
+        test[(i + 1):(k + 1)] <- test[i]
+      }
+      TAX[is.na(TAX[, i]),] <- test
+    }
+  }
+  TAX[is.na(TAX[, (k + 1)]), (k + 1)] <- paste(TAX[is.na(TAX[, (k + 1)]), k], "_uncl", sep = "")
+
+
+#generate phyloseq object
+meso_ps <- phyloseq(otu_table(OTU, taxa_are_rows=TRUE), 
+                    sample_data(sample_df), 
+                    tax_table(TAX))
+
+#add reference sequence and replace variants with ASVs
+dna <- Biostrings::DNAStringSet(taxa_names(meso_ps))
+names(dna) <- taxa_names(meso_ps)
+meso_ps <- merge_phyloseq(meso_ps, dna)
+taxa_names(meso_ps) <- paste0("ASV", seq(ntaxa(meso_ps)))
+
+#remove unclassified on phylum level, chloroplast and Mitochondrial sequence variants
+meso_ps0 <- subset_taxa(meso_ps, !Kingdom %in% c("Eukaryota") & !Phylum %in% c("NA_uncl") & !Order %in% c("Chloroplast") & !Family %in% c("Mitochondria") )
+
+#####################################
+#Fix categories 
+#####################################
+sample_data(meso_ps0)$Community<- factor(
+  sample_data(meso_ps0)$Community, 
+  levels = c("FL", "PA"))
+
+sample_data(meso_ps0)$StationName<- factor(
+  sample_data(meso_ps0)$StationName, 
+  levels = c("T4","T1","T2","T5","T3"))
+
+sample_data(meso_ps0)$Type <- factor(sample_data(meso_ps0)$Type, 
+                                      levels = c("Surface-10","Chl.max-20-30","B.Chl.max-50","Epipelagic-100","Mesopelagic-200","Mesopelagic-400"))
+
+```
+
+## Alpha diversity
+
+```{r Samples overview table, echo=FALSE}
+# standard error function
+se <- function(x, na.rm=FALSE) {
+  if (na.rm) x <- na.omit(x)
+  sqrt(var(x)/length(x))
+}
+
+#reads
+reads.tab <- read.csv2("./data/libs_summary.csv",header = TRUE, sep = "\t")
+row.names(reads.tab) <-paste("X",row.names(reads.tab), sep ="")
+
+V3V4_meta <- sample_data(meso_ps0)
+
+#alpha div indeces
+meso_ps0_alpha <- estimate_richness(meso_ps0, measures = c("Observed", "Chao1","Shannon", "InvSimpson"))
+meso_ps0_alpha$Row.names<-rownames(meso_ps0_alpha)
+
+
+meso_ps0_summary_table <- merge(sample_data(meso_ps0),reads.tab,by =0) %>%
+  merge(meso_ps0_alpha,by ="Row.names")%>%
+  mutate_if(is.numeric, round, 2) %>%
+  mutate(Seq.prop = round(tabled/input,2)) %>%
+  select("Event_ID","StationName","Longitude","Latitude","Depth","Community", "input","tabled", "Seq.prop","Observed","Chao1","Shannon","InvSimpson")%>%
+  rename("Event ID" = "Event_ID",
+         "Fraction" = "Community",
+         "Sampling depth [m]" = "Depth",
+         "Raw seq." = "input",
+         "Final seq." = "tabled",
+         "Seq. proportions" = "Seq.prop",
+         "Observed ASVs" = "Observed",
+         "Chao1 richness est." = "Chao1",
+         "Shannon Index" = "Shannon")
+
+
+
+# calculate mean observed ASVs and sequences per fractio n
+for (frac in c("FL","PA")){
+  #mean number of ASV per sample
+  meso_ps0_sub <- subset_samples(meso_ps0, Community== frac)
+  meso_ps0_sub <- prune_taxa(taxa_sums(meso_ps0_sub)>0, meso_ps0_sub)
+  
+  vectorx <- vector()
+  for (i in sample_names(meso_ps0_sub)){
+    PS107_merged_station <- prune_samples(i, meso_ps0_sub)
+    PS107_merged_station <- prune_taxa(taxa_sums(PS107_merged_station)>0,PS107_merged_station)
+    vectorx <- c(vectorx,dim(otu_table(PS107_merged_station))[1])
+  }
+  PS107_bacteria <- subset_taxa(meso_ps0_sub, Kingdom == "Bacteria")
+  PS107_bacteria <- prune_taxa(taxa_sums(PS107_bacteria)>0,PS107_bacteria)
+  
+  PS107_archaea <- subset_taxa(meso_ps0_sub, Kingdom == "Archaea")
+  PS107_archaea <- prune_taxa(taxa_sums(PS107_archaea)>0,PS107_archaea)
+  
+  assign(paste("df", frac, sep = "."), t(data.frame(total.reads= sum(sample_sums(meso_ps0_sub)),
+                                                    total.ASV= dim(otu_table(meso_ps0_sub))[1],
+                                                    total.BAC.ASV=dim(otu_table(PS107_bacteria))[1],
+                                                    total.ARC.ASV=dim(otu_table(PS107_archaea))[1],
+                                                    mean.ASV.per.sample=mean(vectorx),
+                                                    sd.ASV.per.sample=se(vectorx))))
+}
+
+df.overview <- as.data.frame(cbind(df.FL, df.PA), row.names = gsub("\\."," ", rownames(df.FL)))
+
+meso_ps0_summary_table
+```
+
+
+```{r Rarefaction curves, echo=FALSE}
+#Plot rarefaction
+iNEXT.out <- iNEXT(as.data.frame(otu_table(meso_ps0)), q=0, datatype="abundance")
+rare <-fortify(iNEXT.out, type=1)
+
+meta <- as(sample_data(meso_ps0), "data.frame")
+meta$site <- rownames(meta)
+rare$Community <- meta$Community[match(rare$site, meta$site)] 
+rare$StationName <- meta$StationName[match(rare$site, meta$site)] 
+rare$Type <- factor(meta$Type[match(rare$site, meta$site)], levels = c("Surface-10","Chl.max-20-30","B.Chl.max-50","Epipelagic-100","Mesopelagic-200","Mesopelagic-400"))
+rare$label <- paste(rare$StationName,rare$Type, sep = "-")
+
+rare.point <- rare[which(rare$method == "observed"),]
+rare.line <- rare[which(rare$method != "observed"),]
+rare.line$method <- factor (rare.line$method,
+                            c("interpolated", "extrapolated"),
+                            c("interpolation", "extrapolation"))
+
+ggplot(rare, aes(x=x, y=y, colour = site))+
+  geom_line(aes(linetype = method), lwd = 0.5, data= rare.line)+
+  #geom_ribbon(aes(ymin=y.lwr, ymax= y.upr, colour = NULL), alpha = 0.2)+
+  geom_point(aes(shape=Type, fill=Community), size =3, data= rare.point)+
+  #geom_text(aes(label=label), size =2, data= rare.point, colour = "black", nudge_y = -100)+
+  scale_colour_discrete(guide = FALSE)+
+  labs(x = "Sample size", y = "Species richness")+
+  #xlim(0,1e5)+ylim(0,6000)+
+  theme(legend.position="bottom")+
+  facet_grid(~Community, scales = "free",as.table = TRUE)+
+  geom_hline(aes(yintercept=-Inf)) + 
+  geom_vline(aes(xintercept=-Inf)) +
+  geom_vline(aes(xintercept=Inf))+
+  coord_cartesian(clip="off")
+```
+
+
+```{r Alpha div - Shannon, echo=FALSE}
+# Create new ps object with diversity estimates added to sample_data
+meso_ps0_div <- merge_phyloseq(meso_ps0, sample_data(meso_ps0_alpha))
+# Run Shapiro test
+shapiro_test_Shan <- shapiro.test(sample_data(meso_ps0_div)$Shannon)
+shapiro_test_invSimp <- shapiro.test(sample_data(meso_ps0_div)$InvSimpson)
+shapiro_test_Chao1 <- shapiro.test(sample_data(meso_ps0_div)$Chao1)
+shapiro_test_Observed <- shapiro.test(sample_data(meso_ps0_div)$Observed)
+
+#test with which parameters shannon diversity is associated 
+sampledata_DF <- data.frame(sample_data(meso_ps0_div))
+
+#ANOVA with Depth factor and Tukey’s HSD post-hoc test to determine which pairwise comparisons are different
+aov.shannon <- aov(Shannon ~ Type, data = sampledata_DF)
+TukeyHSD(aov.shannon)
+
+
+```
+
+```{r Alpha div -  Chao1, echo=FALSE}
+aov.Chao1 <- aov(Chao1 ~ Type, data = sampledata_DF)
+TukeyHSD(aov.Chao1)
+```
+
+```{r Alpha div -  Observed ASVs, echo=FALSE}
+aov.Observed <- aov(Observed  ~ Type, data = sampledata_DF)
+TukeyHSD(aov.Observed)
+```
+
+```{r richness inside the filament, echo=FALSE}
+sampledata_DF_sub <- sampledata_DF[sampledata_DF$Depth< 60,]
+t.test(Observed ~ Group, data = sampledata_DF_sub)
+
+t.test(Chao1 ~ Group, data = sampledata_DF_sub)
+
+#below 30 m
+sampledata_DF_sub <- sampledata_DF[sampledata_DF$Depth> 60,]
+t.test(Observed ~ Group, data = sampledata_DF_sub)
+
+t.test(Chao1 ~ Group, data = sampledata_DF_sub)
+
+```
+
+```{r richness plot, echo=FALSE}
+#separation of surface and deep
+sample_data(meso_ps0)$layers <- "down"
+sample_data(meso_ps0)$layers[sample_data(meso_ps0)$Depth < 60] <- "up"
+
+sample_data(meso_ps0)$layers <- factor(sample_data(meso_ps0)$layers, level = c("up","down"))
+
+rich.plot.type<- plot_richness(meso_ps0, x = "Type", measures = c("Observed","Shannon","InvSimpson","Chao1"),color = "Community", nrow = 2)+
+  geom_boxplot()+ 
+  geom_jitter(width = 0.05)+
+  labs(x= "Water depths", y="Diversity")+
+  theme(axis.text.x = element_text(angle =90))+
+  geom_vline(aes(xintercept=Inf)) + 
+  coord_cartesian(clip="off")
+
+rich.plot.in_out<- plot_richness(meso_ps0, x = "layers", measures = c("Observed","Shannon","Chao1"),color = "Group", nrow = 1)+
+  geom_boxplot()+ 
+  geom_jitter(width = 0.05)+
+  labs(x= "Water depths", y="Diversity")+
+  theme(axis.text.x = element_text(angle =90))+
+  geom_vline(aes(xintercept=Inf)) + 
+  coord_cartesian(clip="off")
+```
+
+
+
+```{r Presence/absence, echo=FALSE}
+
+#subset upper water column
+meso_ps0_up <- subset_samples(meso_ps0, layers == "up")
+meso_ps0_up_merged <- merge_samples(meso_ps0_up, "Group")
+meso_ps0_up_merged <- prune_taxa(taxa_sums(meso_ps0_up_merged)>0,meso_ps0_up_merged)
+sample_names(meso_ps0_up_merged)<- c("up_in","up_out")
+
+meso_ps0_down <- subset_samples(meso_ps0, layers == "down")
+meso_ps0_down_merged <- merge_samples(meso_ps0_down, "Group")
+meso_ps0_down_merged <- prune_taxa(taxa_sums(meso_ps0_down_merged)>0,meso_ps0_down_merged)
+sample_names(meso_ps0_down_merged)<- c("down_in","down_out")
+
+#merge phyloseq objects togather
+meso_ps0_merged <- merge_phyloseq(meso_ps0_up_merged,meso_ps0_down_merged)
+
+
+#down
+meso_ps0_up_in <- prune_samples("up_in", meso_ps0_merged)
+meso_ps0_up_in <- prune_taxa(taxa_sums(meso_ps0_up_in)>0,meso_ps0_up_in)
+
+meso_ps0_up_out <- prune_samples("up_out", meso_ps0_merged)
+meso_ps0_up_out <- prune_taxa(taxa_sums(meso_ps0_up_out)>0,meso_ps0_up_out)
+
+meso_ps0_down_in <- prune_samples("down_in", meso_ps0_merged)
+meso_ps0_down_in <- prune_taxa(taxa_sums(meso_ps0_down_in)>0,meso_ps0_down_in)
+
+meso_ps0_down_out <- prune_samples("down_out", meso_ps0_merged)
+meso_ps0_down_out <- prune_taxa(taxa_sums(meso_ps0_down_out)>0,meso_ps0_down_out)
+
+z <- list()
+z[["up_in"]] <- as.character(colnames(otu_table(meso_ps0_up_in, taxa_are_rows = FALSE)))
+z[["up_out"]] <- as.character(colnames(otu_table(meso_ps0_up_out, taxa_are_rows = FALSE)))
+z[["down_in"]] <- as.character(colnames(otu_table(meso_ps0_down_in, taxa_are_rows = FALSE)))
+z[["down_out"]] <- as.character(colnames(otu_table(meso_ps0_down_out, taxa_are_rows = FALSE)))
+
+#generate overlap matrix
+ASVs_overlaps <- pres_abs_matrix(z)    
+ASVs_overlaps$ASV <- rownames(ASVs_overlaps)
+
+taxonomy <- as.data.frame(tax_table(meso_ps0))
+taxonomy$ASV <- rownames(taxonomy)
+
+ASVs_overlaps <- full_join(taxonomy,ASVs_overlaps, by = c("ASV"))
+
+#explore results
+ASVs_up_all <- ASVs_overlaps %>% 
+  filter(up_in =="1",
+         up_out =="1")%>%
+  group_by(Phylum,Class,Order)%>%
+  summarize(Total_ASVs=n())
+
+ASVs_up_in <- ASVs_overlaps %>% 
+  filter(up_in =="1",
+         up_out =="0")%>%
+  group_by(Phylum,Class,Order)%>%
+  summarize(Total_ASVs=n())
+
+ASVs_up_out <- ASVs_overlaps %>% 
+  filter(up_in =="0",
+         up_out =="1")%>%
+  group_by(Phylum,Class,Order)%>%
+  summarize(Total_ASVs=n())
+
+#below 50 m
+ASVs_down_all <- ASVs_overlaps %>% 
+  filter(down_in =="1",
+         down_out =="1")%>%
+  group_by(Phylum,Class,Order)%>%
+  summarize(Total_ASVs=n())
+
+ASVs_down_in <- ASVs_overlaps %>% 
+  filter(down_in =="1",
+         down_out =="0")%>%
+  group_by(Phylum,Class,Order)%>%
+  summarize(Total_ASVs=n())
+
+
+ASVs_down_out <- ASVs_overlaps %>% 
+  filter(down_in =="0",
+         down_out =="1")%>%
+  group_by(Phylum,Class,Order)%>%
+  summarize(Total_ASVs=n())
+
+#plot
+venn(z, snames = names(z), ilab=TRUE, zcolor = "style")
+
+```
+
+
+```{r Prevalance filtration, echo=FALSE}
+#####################################
+# Compute prevalence of each feature
+#####################################
+prevdf <-  apply(X = otu_table(meso_ps0),
+                 MARGIN = ifelse(taxa_are_rows(meso_ps0), yes = 1, no = 2),
+                 FUN = function(x){sum(x > 0)})
+
+# # Add taxonomy and total read counts to this data.frame
+prevdf.tax  <-  data.frame(Prevalence = prevdf,
+                           TotalAbundance = taxa_sums(meso_ps0),
+                           tax_table(meso_ps0))
+#summarize
+prevdf.tax.summary <- plyr::ddply(prevdf.tax, "Phylum", function(df1){cbind(mean(df1$Prevalence),sum(df1$TotalAbundance))})
+
+# 
+# #plot
+prev_plot_phyl <- ggplot(prevdf.tax, aes(TotalAbundance, Prevalence / nsamples(meso_ps0),color=Phylum)) +
+  # # Include a guess for parameter
+  geom_hline(yintercept = 0.1, alpha = 0.5, linetype = 2) + geom_point(size = 2, alpha = 0.7) +
+  scale_x_log10() +  xlab("Total Abundance") + ylab("Prevalence [Frac. Samples]") +
+  facet_wrap(~Phylum) + theme(legend.position="none")
+
+#  Define prevalence threshold as 5% of total samples
+prevalenceThreshold <- round(0.05 * nsamples(meso_ps0))
+prevalenceThreshold
+
+# Execute prevalence filter, using `prune_taxa()` function
+meso_ps0.prev <-  prune_taxa((prevdf > prevalenceThreshold), meso_ps0)
+```
+
+
+```{r NMDS plot all, echo=FALSE}
+#variance stabilization
+meso_ps0.dds <- phyloseq_to_deseq2(meso_ps0.prev, ~1)
+varianceStabilizingTransformation(meso_ps0.dds, blind = TRUE, fitType = "parametric")
+meso_ps0.dds <- estimateSizeFactors(meso_ps0.dds)
+meso_ps0.dds <- estimateDispersions(meso_ps0.dds)
+otu.vst <- getVarianceStabilizedData(meso_ps0.dds)
+meso_ps0.vst<-meso_ps0
+otu_table(meso_ps0.vst)<- otu_table(otu.vst, taxa_are_rows = TRUE)
+
+#plot NMDS
+meso_ps0.vst_ord <- ordinate(meso_ps0.vst, method = "RDA", distance = "euclidean")
+plot_ordination(meso_ps0.vst, meso_ps0.vst_ord,  color = "Group", shape = "Community")+ geom_point(colour="black",size = 5)+
+  geom_point(size = 4)+ 
+  coord_fixed()+
+  #geom_text(aes(label = paste(StationName,Depth, sep = "-")), colour = "black", nudge_y= -0.5,  size=4)+
+  geom_label_repel(aes(label = paste(StationName,paste(Depth,"m", sep = "")),
+                       fill = Group), color = 'black',
+                   size = 3, seed = 1)+
+  scale_fill_manual(values = c("in"= "red","out" = "lightblue"))+
+  theme(legend.position = "bottom")
+
+#PERMANOVA test for surface waters
+df <- as(sample_data(meso_ps0.vst), "data.frame")
+d <- phyloseq::distance(meso_ps0.vst, "euclidean")
+adonis_all <- adonis(d ~ Community + Group , df)
+adonis_all
+
+```
+
+```{r NMDS plot surface, echo=FALSE}
+#subset surface and chl-a max. samples and ordinate
+meso_ps0.vst.up <- subset_samples(meso_ps0.vst, layers == "up")
+meso_ps0.vst.up<- prune_taxa(taxa_sums(meso_ps0.vst.up)>0,meso_ps0.vst.up)
+
+meso_ps0.vst_ord.up <- ordinate(meso_ps0.vst.up, method = "RDA", distance = "euclidean")
+plot_ordination(meso_ps0.vst.up, meso_ps0.vst_ord.up,  color = "Group", shape = "Community")+ geom_point(colour="black",size = 5)+
+  geom_point(size = 4)+ 
+  coord_fixed()+
+  #geom_text(aes(label = paste(StationName,Depth, sep = "-")), colour = "black", nudge_y= -0.5,  size=4)+
+  geom_label_repel(aes(label = paste(StationName,paste(Depth,"m", sep = "")),
+                       fill = Group), color = 'black',
+                   size = 3, seed = 1)+
+  scale_fill_manual(values = c("in"= "red","out" = "lightblue"))+
+  theme(legend.position = "bottom")
+
+#PERMANOVA test for surface waters
+df <- as(sample_data(meso_ps0.vst.up), "data.frame")
+d <- phyloseq::distance(meso_ps0.vst.up, "euclidean")
+adonis_up <- adonis(d ~ Community + Group , df)
+adonis_up
+```
+
+
+```{r Enrichment test, echo=FALSE}
+res_all <- data.frame()
+gm_mean = function(x, na.rm=TRUE){
+  exp(sum(log(x[x > 0]), na.rm=na.rm) / length(x))
+}
+
+for (frac in c("FL","PA")){
+PS107_merged.prev.frac <- subset_samples(meso_ps0.prev, layers =="up")
+PS107_merged.prev.frac <- subset_samples(PS107_merged.prev.frac, Community ==frac)
+PS107_merged.prev.frac <- prune_taxa(taxa_sums(PS107_merged.prev.frac)>0,PS107_merged.prev.frac)
+
+#run DEseq
+BAC_sed.ddsMat <- phyloseq_to_deseq2(PS107_merged.prev.frac, ~Group)
+geoMeans = apply(counts(BAC_sed.ddsMat), 1, gm_mean)
+BAC_sed.ddsMat = estimateSizeFactors(BAC_sed.ddsMat, geoMeans = geoMeans)
+BAC_sed.DEseq = DESeq(BAC_sed.ddsMat, fitType="local")
+
+BAC_sed.DEseq.res <- results(BAC_sed.DEseq)
+
+BAC_sed.DEseq.res = BAC_sed.DEseq.res[order(BAC_sed.DEseq.res$padj, na.last=NA), ]
+alpha = 0.1
+sigtab = BAC_sed.DEseq.res[(BAC_sed.DEseq.res$padj < alpha), ]
+sigtab = cbind(as(sigtab, "data.frame"), as(tax_table(meso_ps0.prev)[rownames(sigtab), ], "matrix"))
+
+sigtab$frac <- frac
+
+res_all <- rbind(res_all,sigtab, make.row.names = TRUE)
+}
+
+res_all.agg <- do.call(data.frame, aggregate(log2FoldChange~ Class+Order+Family + frac, res_all, function(x) c(mean = mean(x), se = se(x), n = length(x))))
+
+Family <- res_all.agg$Family[res_all.agg$log2FoldChange.n>2]
+
+res_all_for_plot <- res_all[res_all$Family %in% Family,]
+
+ggplot(res_all[res_all$Family %in% Family,], aes(y=log2FoldChange , x=Family, colour = Class))+ 
+  geom_jitter(aes(shape = frac),size = 3)+
+  geom_boxplot(data= res_all_for_plot[res_all_for_plot$log2FoldChange>0,], aes(y=log2FoldChange , x=Family), colour = "gray", fill = NA, alpha = 0.5, size = 1)+ 
+   geom_boxplot(data= res_all_for_plot[res_all_for_plot$log2FoldChange<0,], aes(y=log2FoldChange , x=Family, colour = Class),colour = "gray", fill = NA, alpha = 0.5, size = 1)+ 
+  scale_colour_manual(values = sample(tol21rainbow))+ 
+  scale_x_discrete("Class",expand = waiver())+
+  geom_hline(aes(yintercept=0), linetype="dashed")+
+  theme_classic()+
+  theme(legend.position = "bottom", axis.text.x = element_text(angle =90))+
+  coord_flip()+
+  geom_vline(aes(xintercept=Inf)) + 
+  geom_hline(aes(yintercept=Inf))
+
+
+
+
+
+```
