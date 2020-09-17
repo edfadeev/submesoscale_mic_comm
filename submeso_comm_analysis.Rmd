@@ -5,9 +5,9 @@ output: github_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
-	echo = TRUE,
 	message = FALSE,
-	warning = FALSE
+	warning = FALSE,
+	include = FALSE
 )
 #load libraries
 library(phyloseq); packageVersion("phyloseq")
@@ -267,8 +267,6 @@ rich.plot.in_out<- plot_richness(meso_ps0, x = "layers", measures = c("Observed"
   coord_cartesian(clip="off")
 ```
 
-
-
 ```{r Presence/absence, echo=FALSE}
 
 #subset upper water column
@@ -358,7 +356,6 @@ venn(z, snames = names(z), ilab=TRUE, zcolor = "style")
 
 ```
 
-
 ```{r Prevalance filtration, echo=FALSE}
 #####################################
 # Compute prevalence of each feature
@@ -389,7 +386,6 @@ prevalenceThreshold
 # Execute prevalence filter, using `prune_taxa()` function
 meso_ps0.prev <-  prune_taxa((prevdf > prevalenceThreshold), meso_ps0)
 ```
-
 
 ```{r NMDS plot all, echo=FALSE}
 #variance stabilization
@@ -495,12 +491,12 @@ ggplot(res_all[res_all$Family %in% Family,], aes(y=log2FoldChange , x=Family, co
   theme_classic()+
   theme(legend.position = "bottom", axis.text.x = element_text(angle =90))+
   coord_flip()+
-  xlim(-10,10)+
+  ylim(-10,10)+
   geom_vline(aes(xintercept=Inf)) + 
   geom_hline(aes(yintercept=Inf))
 
 
-
+write.table(res_all.agg, "data/enriched_taxa.txt")
 
 
 ```

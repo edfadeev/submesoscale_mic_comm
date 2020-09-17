@@ -161,13 +161,15 @@ taxa <- addSpecies(taxa, "../tax/silva_species_assignment_v138.fa.gz", tryRC = T
 save.image("MESO_V4V5_dada2_sep_runs.Rdata")
 
 
+sample.order <- names(c(dadaFs_mi1,dadaFs_mi2,dadaFs_mi3,dadaFs_mi4,dadaFs_mi5))
 
 # get summary tables 
 getN <- function(x) sum(getUniques(x))
-track <- cbind(rbind(out_hi,out_mi1), sapply(c(dadaFs_hi,dadaFs_mi1), getN),
-               sapply(c(mergers_hi,mergers_mi1), getN),
-               rowSums(seqtab.nochim),
-               rowSums(seqtab.nochim2))
+track <- cbind(rbind(out_mi1,out_mi2,out_mi3,out_mi4,out_mi5), 
+               sapply(c(dadaFs_mi1,dadaFs_mi2,dadaFs_mi3,dadaFs_mi4,dadaFs_mi5), getN),
+               sapply(c(mergers_mi1,mergers_mi2,mergers_mi3,mergers_mi4,mergers_mi5), getN),
+               rowSums(seqtab.nochim[sample.order,]),
+               rowSums(seqtab.nochim2[sample.order,]))
 colnames(track) <- c("input", "filtered", "denoised", "merged", "nochim", "tabled")
 rownames(track) <- sample.names
 track <- data.frame(track)
