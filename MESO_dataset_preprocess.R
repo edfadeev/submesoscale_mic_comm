@@ -130,18 +130,6 @@ saveRDS(PS107_merged.vst, "./Data/PS107_merged_vst.rds")
 saveRDS(PS107_merged, "./Data/PS107_merged.rds")
 saveRDS(PS107_merged.prev, "./Data/PS107_merged_prev.rds")
 
-
-#####################################
-# export for Source Tracker on Aphros
-#####################################
-#raw table
-#export tables for Aphros
-write.table(sample_data(PS107_merged.prev), file = './Data/PS107_metadata_prev.csv',sep = ";", dec = ".", row.names = TRUE)
-
-otus <- as.data.frame(otu_table(PS107_merged.prev))
-otus <- t(as.matrix(otus))
-write.table(otus, file = './Data/PS107_otus_for_ST_prev.csv',sep = ";", dec = ".", row.names = TRUE)
-
 #####################################
 #get session info and remove all objects and libraries
 #####################################

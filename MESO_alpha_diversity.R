@@ -25,7 +25,7 @@ PS107_merged <-  readRDS("./Data/PS107_merged_prev.rds")
 #####################################
 #Plot rarefaction
 ####################################
-iNEXT.out <- iNEXT(as.data.frame(otu_table(PS107_merged.prev)), q=0, datatype="abundance")
+iNEXT.out <- iNEXT(as.data.frame(otu_table(PS107_merged)), q=0, datatype="abundance")
 rare <-fortify(iNEXT.out, type=1)
 
 meta <- as(sample_data(PS107_merged.prev), "data.frame")
@@ -63,14 +63,14 @@ ggsave("./figures/rarefaction-prev.pdf",
 #Alpha diversity statistical tests
 ####################################
 # Calculate richness
-PS107_alpha.div <- estimate_richness(PS107_merged.prev, split = TRUE, measures = NULL)
+PS107_alpha.div <- estimate_richness(PS107_merged, split = TRUE, measures = NULL)
 
 #generate data set with all bacterial community characteristics
-PS107_comm.char<- data.frame(Station = sample_data(PS107_merged.prev)$StationName,
-                             Group = sample_data(PS107_merged.prev)$Group,
-                             Depth = sample_data(PS107_merged.prev)$Depth,
-                             Type = sample_data(PS107_merged.prev)$Type,
-                             Community = sample_data(PS107_merged.prev)$Community,
+PS107_comm.char<- data.frame(Station = sample_data(PS107_merged)$StationName,
+                             Group = sample_data(PS107_merged)$Group,
+                             Depth = sample_data(PS107_merged)$Depth,
+                             Type = sample_data(PS107_merged)$Type,
+                             Community = sample_data(PS107_merged)$Community,
                              Sequences= sample_sums(PS107_merged),
                              Observed = PS107_alpha.div$Observed,
                              Chao1 = PS107_alpha.div$Chao1,

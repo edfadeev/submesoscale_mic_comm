@@ -152,27 +152,31 @@ PS107_upper50m.ord.df <- plot_ordination(PS107_upper50m, PS107_upper50m.ord, axe
 #extract explained variance
 PS107_upper50m.ord.evals <- 100 * (PS107_upper50m.ord$CA$eig/ sum(PS107_upper50m.ord$CA$eig))
 PS107_upper50m.ord.df$ID <- rownames(PS107_upper50m.ord.df)
+PS107_upper50m.ord.df$Type <- factor(PS107_upper50m.ord.df$Type , levels=c("Surface-10", 
+                                                                    "Chl.max-20-30",
+                                                                    "B.Chl.max-50"))
 
-PS107_upper50m.ord.p <- ggplot(data = PS107_upper50m.ord.df, aes(x =PC1, y=PC2, shape = Community))+
+PS107_upper50m.ord.p <- ggplot(data = PS107_upper50m.ord.df, aes(x =PC1, y=PC2, shape = Community, colour = Type))+
   geom_point(colour="black",size = 5)+
   geom_point(size = 4)+
-  #stat_ellipse(data = PS107.ord.df, aes(x =PC1, y=PC2, group = Type), size = 1, type= "t")+
-  #geom_text(aes(label = StationName, colour = Group), nudge_y= -0.5,  size=4)+
+  #geom_text_repel(aes(label = paste(StationName,paste(Depth,"m", sep = "")), colour = Group), fill = "white", size = 5, seed = 1, segment.colour = NA)+
+  #stat_ellipse(data = PS107.ord.df, aes(x =PC1, y=PC2, group = Type), colour = "black",size = 1, type= "norm")+
+  geom_text(aes(label = paste(StationName,paste(Depth,"m", sep = "")), colour = Group), nudge_y= -0.5,  size=4)+
   labs(x = sprintf("PC1 [%s%%]", round(PS107.ord.evals[1], 2)), 
        y = sprintf("PC2 [%s%%]", round(PS107.ord.evals[2], 2)), shape = "Depth", color = "Community")+
   scale_color_manual(values = c("Surface-10" = "lightblue", 
                                 "Chl.max-20-30"="green",
-                                "B.Chl.max-50"="darkgreen")) +
-  geom_label_repel(aes(label = paste(StationName,paste(Depth,"m", sep = "")),
-                       fill = Group), color = 'white',
-                   size = 3, seed = 1)+
+                                "B.Chl.max-50"="darkgreen",
+                                "in"= "red","out" = "blue")) +
   scale_fill_manual(values = c("in"= "red","out" = "blue"))+
   theme_classic(base_size = 12)+
   theme(legend.position = "bottom")
 
 
 
-
+ggsave("./figures/PCA_prev_surf.pdf", PS107_upper50m.ord.p, dpi = 300, 
+       #width = 11.4, height = 23, 
+       units = "cm")
 
 #significance test
 df <- as(sample_data(PS107_merged.prev.vst), "data.frame")
