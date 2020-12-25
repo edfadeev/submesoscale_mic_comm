@@ -44,7 +44,12 @@ rare.p <- ggplot(rare, aes(x=x, y=y, colour = site))+
   facet_grid(~Community)+
   xlim(0,3e5)+
   #ylim(0,6000)+
-  theme_classic(base_size = 12)+theme(legend.position="bottom")
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
+        axis.line = element_line(colour = "black"),axis.text.x = element_blank(),
+        text=element_text(size=14),legend.position = "bottom", 
+        axis.title.x = element_blank())
+
 
 ggsave("./figures/rarefaction.pdf", 
        plot = rare.p,
@@ -134,6 +139,11 @@ TukeyHSD(aov.Chao1)
 aov.Observed <- aov(Observed  ~ Type, data = sampledata_DF)
 TukeyHSD(aov.Observed)
 
+#compare richness above and below 50 m
+t.test(Observed ~ layers, data = sampledata_DF)
+
+t.test(Chao1 ~ layers, data = sampledata_DF)
+
 #compare richness inside and outside
 sampledata_DF_sub <- sampledata_DF[sampledata_DF$Depth< 60,]
 t.test(Observed ~ Group, data = sampledata_DF_sub)
@@ -155,25 +165,28 @@ sampledata_DF_long<- sampledata_DF %>% mutate(layer = case_when(Depth >60 ~ "Bel
                   mutate(layer = factor(layer,level = c("Upper 50 m","Below 50m")),
                          Group = factor(Group,level = c("Inside the filament","Outside the filament"))) %>% 
                     select(Group, layer, StationName, Depth, Type, Community, Observed, Shannon, Chao1) %>% 
-                      melt(measure.vars = c("Observed","Chao1","Shannon")) %>% 
-                        mutate(variable = factor(variable, levels =c("Observed","Chao1","Shannon")))
+                      melt(measure.vars = c("Chao1","Shannon")) %>% 
+                        mutate(variable = factor(variable, levels =c("Chao1","Shannon")))
 
 
 rich.plot.type<- ggplot(sampledata_DF_long, aes (x = layer, y = value, group = interaction(layer,Group,Community), shape = Community, colour = Group))+
   geom_boxplot()+
   geom_jitter()+
-  facet_wrap(variable~., scales = "free", ncol = 3)+
+  facet_wrap(variable~., scales = "free", ncol = 1)+
   scale_color_manual(values=c("Inside the filament"="red1","Outside the filament"="blue1"))+
   labs(x = "Water depth",y = "Index values")+
   #geom_signif(comparisons = list(c("in", "out")),
   #            map_signif_level=TRUE, test = "wilcox.test", color = "black")+
-  theme_classic()+
-  theme(legend.position = "bottom")
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
+        axis.line = element_line(colour = "black"),axis.text.x = element_blank(),
+        text=element_text(size=14),legend.position = "bottom", 
+        axis.title.x = element_blank())
 
 ggsave("./figures/alpha_div.pdf", 
        plot = rich.plot.type,
-       units = "cm",
-       width = 30, height = 15, 
+       units = "in",
+       width = 3.5,# height = 15, 
        #scale = 1,
        dpi = 300)
 
@@ -226,6 +239,14 @@ taxonomy$ASV <- rownames(taxonomy)
 ASVs_overlaps <- full_join(taxonomy,ASVs_overlaps, by = c("ASV"))
 
 #explore results
+ASVs_all <- ASVs_overlaps %>% 
+  filter(up_in =="1",
+         up_out =="1",
+         down_in == "1",
+         down_out =="1")%>%
+  group_by(Phylum,Class,Order)%>%
+  summarize(Total_ASVs=n())
+
 ASVs_up_all <- ASVs_overlaps %>% 
   filter(up_in =="1",
          up_out =="1")%>%
