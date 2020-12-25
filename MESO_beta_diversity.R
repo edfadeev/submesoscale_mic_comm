@@ -44,11 +44,13 @@ BAC_pruned.ra.long.agg<- BAC_pruned.ra.long.agg %>%
 barplots <- ggplot(BAC_pruned.ra.long.agg, aes(x = StationName, y = Abund.total, fill = Class)) + 
   facet_grid(Type~Community, space= "fixed") +
   geom_col()+
-  scale_fill_manual(values = tol21rainbow) + 
+  scale_fill_manual(values = class_col) + 
   guides(fill = guide_legend(reverse = FALSE, keywidth = 1, keyheight = 1)) +
   ylab("Sequence proportions (%) \n")+
-  theme_classic()+
-  theme(legend.position = "bottom")
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
+        axis.line = element_line(colour = "black"),
+        text=element_text(size=14),legend.position = "bottom")
 
 ggsave("./figures/barplot-prev.pdf", barplots, dpi = 300, 
        width = 30, height = 30, 
@@ -69,16 +71,18 @@ meso_ps0.NMDS.p <- ggplot(data = meso_ps0.gm_mean.df, aes(x = NMDS1, y = NMDS2, 
   geom_point(size = 4) +
   geom_text(aes(x = NMDS1, y = NMDS2,label = paste(StationName, paste(Depth,"m",sep =""),sep="-")), 
             nudge_y= -8,size=3, colour = "black")+
-  scale_colour_manual(values = c("in"="red1",
-                                 "out"="blue1")) + 
+  scale_colour_manual(values = c("in"="#f2756d",
+                                 "out"="#19bcc1")) + 
   annotate(geom="text", x=-80, y=90, label= paste0("Stress = ", round(meso_ps0.gm_mean.ord$stress,2)),
            color="black", size = 5)+
-  theme_classic()+
-  theme(legend.position = "bottom")
-
+  coord_fixed()+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
+        axis.line = element_line(colour = "black"),
+        text=element_text(size=14),legend.position = "bottom")
 
 ggsave("./figures/NMDS_prev.pdf", meso_ps0.NMDS.p, dpi = 300, 
-       #width = 11.4, height = 23, 
+       #width = 30, height = 30, 
        units = "cm")
 
 #####################################
@@ -92,21 +96,29 @@ meso_ps0.gm_mean_up50m <- subset_samples(meso_ps0.gm_mean, Type %in% c("Surface-
 meso_ps0.gm_mean_up50m.ord <- ordinate(meso_ps0.gm_mean_up50m, method = "NMDS", distance = "euclidean")
 meso_ps0.gm_mean_up50m.df <- plot_ordination(meso_ps0.gm_mean_up50m, meso_ps0.gm_mean_up50m.ord, axes = c(1,2,3),justDF = TRUE)
 
+#add centroids
+meso_ps0.gm_mean_up50m.df <- merge(meso_ps0.gm_mean_up50m.df,aggregate(cbind(mean.x=NMDS1,mean.y=NMDS2)~Group,meso_ps0.gm_mean_up50m.df,mean),by="Group")
+
 meso_ps0.NMDS_up50m.p <- ggplot(data = meso_ps0.gm_mean_up50m.df, aes(x = NMDS1, y = NMDS2, shape = Community, colour = Group))+
-  geom_point(colour = "black", size = 5) +
-  geom_point(size = 4) +
+  geom_point(colour = "black", size = 4) +
+  geom_point(size = 3) +
+  geom_point(aes(x=mean.x,y=mean.y),colour = "black",shape = 15, size=4, alpha = 0.5)+
+  geom_point(aes(x=mean.x,y=mean.y),shape = 15, size=3, alpha = 0.5)+
+  geom_segment(aes(x=mean.x, y=mean.y, xend=NMDS1, yend=NMDS2), alpha = 0.5)+
   geom_text(aes(x = NMDS1, y = NMDS2,label = paste(StationName, paste(Depth,"m",sep =""),sep="-")), 
             nudge_y= -2,size=2, colour = "black")+
-  scale_colour_manual(values = c("in"="red1",
-                                 "out"="blue1")) + 
+  scale_colour_manual(values = c("in"="#f2756d",
+                                 "out"="#19bcc1")) + 
   annotate(geom="text", x=-70, y=50, label= paste0("Stress = ", round(meso_ps0.gm_mean_up50m.ord$stress,2)),
-           color="black", size = 5)+
-  theme_classic()+
-  theme(legend.position = "bottom")
+           color="black", size = 3)+
+  #coord_fixed()+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
+        axis.line = element_line(colour = "black"),legend.position = "bottom")
 
 ggsave("./figures/NMDS_prev_surf.pdf", meso_ps0.NMDS_up50m.p, dpi = 300, 
-       #width = 11.4, height = 23, 
-       units = "cm")
+       width = 3.5, #height = 23, 
+       units = "in")
 
 #####################################
 #Statistics on comm. composition
@@ -114,7 +126,7 @@ ggsave("./figures/NMDS_prev_surf.pdf", meso_ps0.NMDS_up50m.p, dpi = 300,
 #significance test
 df <- as(sample_data(meso_ps0.gm_mean), "data.frame")
 d <- phyloseq::distance(meso_ps0.gm_mean, "euclidean")
-adonis_all <- adonis2(d ~ Community + Group + Type, df)
+adonis_all <- adonis2(d ~ Community + Group + layers, df)
 adonis_all
 
 
@@ -189,6 +201,47 @@ ggsave("./figures/enrichment.pdf", meso_prev.enr.p, dpi = 300,
        units = "cm")
 
 write.table(res_all.agg, "data/enriched_taxa.txt")
+
+#####################################
+#Plot only enriched ASVs
+#####################################
+#calculate abundance for each Class and replace classes below 1% with "Other taxa"
+BAC_pruned.ra.long.enriched <- BAC_pruned.ra.long %>% select(OTU, StationName,Community,Type,Class,Abundance)%>%
+  filter(OTU %in% rownames(res_all[res_all$log2FoldChange<0,])) %>% 
+  group_by(StationName,Community,Type,Class) %>%
+  summarize(Abund.total= sum(Abundance)*100)  %>% 
+  filter(Abund.total>0)
+
+taxa_classes <- unique(BAC_pruned.ra.long.enriched$Class)
+
+BAC_pruned.ra.long.enriched<- BAC_pruned.ra.long.enriched %>% 
+  mutate(Class = ifelse(Abund.total < 2, "Other taxa < 2%", Class))%>% 
+  mutate(Class =factor(Class, levels = c(taxa_classes,"Other taxa < 2%")))
+  
+  
+#Plot 
+barplots.enriched <- ggplot(BAC_pruned.ra.long.enriched, aes(x = StationName, y = Abund.total, fill = Class)) + 
+  facet_grid(Type~Community, space= "fixed") +
+  geom_col()+
+  scale_fill_manual(values = class_col) + 
+  guides(fill = guide_legend(reverse = FALSE, keywidth = 1, keyheight = 1)) +
+  ylab("Sequence proportions (%) \n")+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(), 
+        axis.line = element_line(colour = "black"),#axis.text.x = element_blank(),
+        text=element_text(size=14),legend.position = "bottom", 
+        axis.title.x = element_blank())
+
+ggsave("./figures/barplot-enriched.pdf", barplots.enriched, dpi = 300, 
+       width = 30, height = 30, 
+       units = "cm")
+
+enriched.total.abund <- BAC_pruned.ra.long.enriched %>%  group_by(StationName,Community,Type) %>%
+  summarize(total= sum(Abund.total)) %>% 
+  filter(Type %in% c("Surface-10", 
+                     "Chl.max-20-30",
+                     "B.Chl.max-50"))
+
 
 #####################################
 #get session info and remove all objects and libraries
