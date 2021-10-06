@@ -8,17 +8,17 @@ Submesoscale eddies and fronts are important components of oceanic mixing and en
 
 
 ### Content:
-**data** - output files from the 16S dada2 workflow and metadata.
-**scripts** - supporting scripts for the statistical analysis.
-_MESO_dataset_preprocess.R_ - processing of the dada2 output into phyloseq.
-_MESO_alpha_diversity.R_ - Mic. communities alpha diversity calculations (included in supplementary material).
-_MESO_beta_diversity.R_ - Mic. communities beta diversity (Figure 3).
-_MESO_asv_overalps.R_ - Shared and unique ASVs between communities (Figure 4).
-_MESO_enrichment.R_ - taxonomic enrochment tests between mic. communities (Figure 5).
+**data** - output files from the 16S dada2 workflow and metadata. \
+**scripts** - supporting scripts for the statistical analysis. \
+```MESO_dataset_preprocess.R``` - processing of the dada2 output into phyloseq. \
+```MESO_alpha_diversity.R``` - Mic. communities alpha diversity calculations (included in supplementary material). \
+```MESO_beta_diversity.R``` - Mic. communities beta diversity (Figure 3). \
+```MESO_asv_overalps.R``` - Shared and unique ASVs between communities (Figure 4). \
+```MESO_enrichment.R``` - taxonomic enrochment tests between mic. communities (Figure 5). \
 
-## Author:
+### Author:
 Eduard Fadeev([dr.eduard.fadeev@gmail.com](mailto:dr.eduard.fadeev@gmail.com)) 
 
-## Software Versions:
+### Software Versions:
 R version 4.1.1 (2021-08-10)\
 RStudio version: 1.4.1717
